@@ -1,0 +1,171 @@
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Paper dependent stuff    %
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Aesthetics               %
+% over-underline, hat, bold%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\newcommand{\eps}{\varepsilon}
+\newcommand{\vareps}{\varepsilon}
+\renewcommand{\epsilon}{\varepsilon}
+%\renewcommand{\hat}{\widehat}
+\renewcommand{\tilde}{\widetilde}
+\renewcommand{\bar}{\overline}
+
+\newcommand*{\MyDef}{\mathrm{\tiny def}}
+\newcommand*{\eqdefU}{\ensuremath{\mathop{\overset{\MyDef}{=}}}}% Unscaled version
+
+
+
+\def\:#1{\protect \ifmmode {\mathbf{#1}} \else {\textbf{#1}} \fi}
+\newcommand{\CommaBin}{\mathbin{\raisebox{0.5ex}{,}}}
+
+\newcommand{\wt}[1]{\widetilde{#1}}
+\newcommand{\wh}[1]{\widehat{#1}}
+\newcommand{\wo}[1]{\overline{#1}}
+\newcommand{\wb}[1]{\overline{#1}}
+
+% bf and bm missing due to conflict!!
+\newcommand{\bsym}[1]{\mathbf{#1}}
+\newcommand{\bzero}{\mathbf{0}}
+\newcommand{\ba}{\mathbf{a}}
+\newcommand{\bb}{\mathbf{b}}
+\newcommand{\bc}{\mathbf{c}}
+\newcommand{\bd}{\mathbf{d}}
+\newcommand{\be}{\mathbf{e}}
+\newcommand{\bg}{\mathbf{g}}
+\newcommand{\bh}{\mathbf{h}}
+\newcommand{\bi}{\mathbf{i}}
+\newcommand{\bj}{\mathbf{j}}
+\newcommand{\bk}{\mathbf{k}}
+\newcommand{\bl}{\mathbf{l}}
+\newcommand{\bn}{\mathbf{n}}
+\newcommand{\bo}{\mathbf{o}}
+\newcommand{\bp}{\mathbf{p}}
+\newcommand{\bq}{\mathbf{q}}
+\newcommand{\br}{\mathbf{r}}
+\newcommand{\bs}{\mathbf{s}}
+\newcommand{\bt}{\mathbf{t}}
+\newcommand{\bu}{\mathbf{u}}
+\newcommand{\bv}{\mathbf{v}}
+\newcommand{\bw}{\mathbf{w}}
+\newcommand{\bx}{\mathbf{x}}
+\newcommand{\by}{\mathbf{y}}
+\newcommand{\bz}{\mathbf{z}}
+
+\newcommand{\bA}{\mathbf{A}}
+\newcommand{\bB}{\mathbf{B}}
+\newcommand{\bC}{\mathbf{C}}
+\newcommand{\bD}{\mathbf{D}}
+\newcommand{\bE}{\mathbf{E}}
+\newcommand{\bF}{\mathbf{F}}
+\newcommand{\bG}{\mathbf{G}}
+\newcommand{\bH}{\mathbf{H}}
+\newcommand{\bI}{\mathbf{I}}
+\newcommand{\bJ}{\mathbf{J}}
+\newcommand{\bK}{\mathbf{K}}
+\newcommand{\bL}{\mathbf{L}}
+\newcommand{\bM}{\mathbf{M}}
+\newcommand{\bN}{\mathbf{N}}
+\newcommand{\bO}{\mathbf{O}}
+\newcommand{\bP}{\mathbf{P}}
+\newcommand{\bQ}{\mathbf{Q}}
+\newcommand{\bR}{\mathbf{R}}
+\newcommand{\bS}{\mathbf{S}}
+\newcommand{\bT}{\mathbf{T}}
+\newcommand{\bU}{\mathbf{U}}
+\newcommand{\bV}{\mathbf{V}}
+\newcommand{\bW}{\mathbf{W}}
+\newcommand{\bX}{\mathbf{X}}
+\newcommand{\bY}{\mathbf{Y}}
+\newcommand{\bZ}{\mathbf{Z}}
+
+% calligraphic
+\newcommand{\cf}{\mathcal{f}}
+\newcommand{\cA}{\mathcal{A}}
+\newcommand{\cB}{\mathcal{B}}
+\newcommand{\cC}{\mathcal{C}}
+\newcommand{\cD}{\mathcal{D}}
+\newcommand{\cE}{\mathcal{E}}
+\newcommand{\cF}{\mathcal{F}}
+\newcommand{\cG}{\mathcal{G}}
+\newcommand{\cH}{\mathcal{H}}
+\newcommand{\cI}{\mathcal{I}}
+\newcommand{\cJ}{\mathcal{J}}
+\newcommand{\cK}{\mathcal{K}}
+\newcommand{\cL}{\mathcal{L}}
+\newcommand{\cM}{\mathcal{M}}
+\newcommand{\cN}{\mathcal{N}}
+\newcommand{\cO}{\mathcal{O}}
+\newcommand{\cP}{\mathcal{P}}
+\newcommand{\cQ}{\mathcal{Q}}
+\newcommand{\cR}{\mathcal{R}}
+\newcommand{\cS}{\mathcal{S}}
+\newcommand{\cT}{\mathcal{T}}
+\newcommand{\cU}{\mathcal{U}}
+\newcommand{\cV}{\mathcal{V}}
+\newcommand{\cW}{\mathcal{W}}
+\newcommand{\cX}{\mathcal{X}}
+\newcommand{\cY}{\mathcal{Y}}
+\newcommand{\cZ}{\mathcal{Z}}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Math jargon              %
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\newcommand{\wrt}{w.r.t.\xspace}
+\newcommand{\defeq}{\stackrel{\mathclap{\normalfont\mbox{\tiny def}}}{=}}
+\newcommand{\maxund}[1]{\max\limits_{#1}}
+\newcommand{\supund}[1]{\text{sup}\limits_{#1}}
+\newcommand{\minund}[1]{\min\limits_{#1}}
+\renewcommand{\epsilon}{\varepsilon}
+\newcommand{\bigotime}{\mathcal{O}}
+
+
+\DeclareMathOperator*{\argmin}{arg\,min} 
+\DeclareMathOperator*{\argmax}{arg\,max} 
+\DeclareMathOperator*{\cupdot}{\mathbin{\mathaccent\cdot\cup}}
+\newcommand{\eqdef}{\buildrel \text{def}\over =}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Matrix operators         %
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\newcommand{\transpose}{^\mathsf{\scriptscriptstyle T}}
+\newcommand{\transp}{\mathsf{\scriptscriptstyle T}}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Statistic operators      %
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\newcommand{\probability}[1]{\mathbb{P}\left(#1\right)}
+\newcommand{\probdist}{Pr}
+\DeclareMathOperator*{\expectedvalue}{\mathbb{E}}
+\DeclareMathOperator*{\variance}{\text{Var}}
+\newcommand{\expectedvalueover}[1]{\expectedvalue\limits_{#1}}
+\newcommand{\condbar}{\;\middle|\;}
+\newcommand{\gaussdistr}{\mathcal{N}}
+\newcommand{\uniformdistr}{\mathcal{U}}
+\newcommand{\bernoullidist}{\mathcal{B}}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Algebraic Sets           %
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\newcommand{\Real}{\mathbb{R}}
+\newcommand{\Natural}{\mathbb{N}}
+\newcommand{\statespace}{\mathcal{X}}
+\newcommand{\funcspace}{\mathcal{F}}
+\newcommand{\dynaspace}{\mathcal{T}}
+
+
+\newtheorem{theorem}{Theorem}
+\newtheorem{definition}{Definition}
+\newtheorem{lemma}{Lemma}
+\newtheorem{proposition}{Proposition}
+\newtheorem{remark}{Remark}
+\newtheorem{property}{Property}
+\newtheorem{assumption}{Assumption}
+\newtheorem{conjecture}{Conjecture}

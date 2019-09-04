@@ -9,7 +9,7 @@
 
 % to compile a preprint version, e.g., for submission to arXiv, add add the
 % [preprint] option:
- \usepackage[preprint]{neurips_2019_ml4ad}
+ \usepackage[preprint, nonatbib]{neurips_2019_ml4ad}
 
 % to compile a camera-ready version, add the [final] option, e.g.:
 % \usepackage[final]{neurips_2019_ml4ad}
@@ -27,6 +27,7 @@
 \usepackage{microtype}      % microtypography
 
 % Custom packages
+\usepackage[round]{natbib}
 \usepackage{amsmath}
 \usepackage{amssymb}
 \usepackage{graphicx}
@@ -35,6 +36,9 @@
 \usetikzlibrary{arrows,automata}
 \usepackage{pgfplots}
 \usetikzlibrary{intersections}
+\usepackage{subcaption}
+
+\input{mathdef}
 
 \title{Social Attention for Autonomous Decision-Making in Dense Traffic}
 
@@ -51,17 +55,14 @@
 
 \author{%
   Edouard Leurent\thanks{Equal contribution.} \\
-  Inria, SequeL team\\
-  Renault Group\\
-  Paris, France\\
-  \texttt{edouard.leurent@renault.com} \\
+  SequeL team, INRIA Lille -- Nord Europe\\
+  Renault Group, France\\
+  \texttt{edouard.leurent@inria.fr} \\
   % examples of more authors
    \And
   Jean Mercat$^*$ \\
-  Laboratoire des signaux et des syst\`emes,
-  Centrale-Sup\'elec\\
-  Renault Group\\
-  Paris, France\\
+  Laboratoire des signaux et des syst\`emes, Centrale-Sup\'elec\\
+  Renault Group, France\\
   \texttt{jean.mercat@renault.com} \\
 }
 
@@ -113,15 +114,29 @@ List of vehicles with their coordinates
 but variable size, + combinatorial representation
 Occupancy grid / images : fixed size, tradeoff:  low accuracy vs exploding size
 
+Contributions:
+- We propose an attention-based architecture for decision-making involving social interactions, that accounts for two-way interactions between the ego-vehicle and every other traffic participant
+- We evaluate our model on a challenging intersection-crossing task involving up to 20 vehicles perceived simultaneously.
+
 \section{Background and Related Work}
 
-\subsection{Model-Free Deep Reinforcement Learning}
+\paragraph{Model-free deep reinforcement learning} Reinforcement Learning (RL) is a general framework for decision-making under uncertainty. It frames the learning objective as the optimal control of a Markov Decision Process  $(S, A, P, R, \gamma)$ with measurable state space $S$, action space $A$, unknown reward function $R\in\Real^{S \times A}$, and unknown dynamics $P\in \cM(S)^{S \times A}$, where $\cM(\mathcal{X})$ denotes the probability measures over a set $\mathcal{X}$. We seek a policy $\pi\in\cM(A)^S$ with maximal expected $\gamma$-discounted cumulative reward, called the value function $V^\pi$. Formally,
 
-- MDP
-- Value function
-- DQN
+\begin{align*}
+V^\pi(s) &\eqdef \expectedvalue\left[\sum_{t=0}^\infty \gamma^t R(s_t, a_t)\condbar s_0=s, a_t\sim \pi(a_t|s_t), s_{t+1}\sim P(s_{t+1}|s_t, a_t)\right]\\
+Q^\pi(s, a) &\eqdef R(s, a) + \gamma \expectedvalueover{s'\sim P(s'|s, a)} V^\pi(s')
+\end{align*}
 
-\subsection{State Representation for Social Interactions}
+The optimal action-value function $Q^* =  \max_\pi Q^\pi(s)$ satisfies the Bellman Optimality Equation:
+\begin{equation*}
+Q^*(s, a) = (\cT Q^*) (s, a) \eqdef \expectedvalueover{s'\sim P(s'|s, a)} \max_{a'\in A} \left[R(s, a) + \gamma Q^*(s', a')\right]
+\end{equation*}
+
+As $Q^*$ is a fixed-point of the Bellman Operator $\cT$ -- which is a contraction --, it can be computed by applying $\cT$ iteratively in a fixed-point iteration fashion. The \emph{Q-learning} algorithm \citep{Watkins} follows this procedure by applying a sampling version $\cT$ to a batch of collected experience. When dealing with a continuous state space $S$, we need to employ function approximation in order to generalise to nearby states. The \emph{Deep Q-Network} (DQN) algorithm \citep{Mnih} implements this idea by using a neural network model to represent the action-value function $Q$.
+
+\paragraph{State-representation for social interactions}{
+
+
 In the state:
 Kinematics
 Not fixed size
@@ -130,6 +145,20 @@ Occupancy grid
 In the model:
 
 Weight sharing ?
+Socially aware}
+
+
+\paragraph{Attention mechanisms} {in neural networks have been able to introduce inter-dependencies within a variable number of inputs.
+It has been used for pedestrian trajectory forecasting in~\cite{Vemula2018} with spatiotemporal graphs and
+in~\cite{Sadeghian2019CVPR} with spatial and social attention using a generative neural network.
+In~\cite{Sadeghian2018ECCV}, attention over top-view road scene images for car trajectory forecasting is used.
+Multi-head attention mechanism has been developed in~\cite{Vaswani2017} for sentence translation.
+In~\cite{Messaoud2019} a mechanism called non-local multi-head attention is developed.
+However, this is a spatial attention that does not allow vehicle-to-vehicle attention.
+
+In the present work, we use a multi-head social attention mechanism working together with
+recurrent neural networks to forecast in the form of sequences of multi-modal position probability density
+functions.}
 
 \section{Model Architecture}
 
@@ -173,8 +202,6 @@ Motivation:
 	\node[right of=DEC1, node distance=2.3cm](Y1){action values};
 	
 	\draw (DEC1.east) -- (Y1.west);
-	
-	%        \draw[decorate,decoration={brace,mirror}] (X1.north west) -- node[left=10pt] {$X$} (X3.south west);
 	\end{tikzpicture}
 	\caption{Block diagram of our model architecture.}
 	\label{sch_whole_model}
@@ -207,13 +234,12 @@ The computations made by each attention head is represented on figure~\ref{fig:e
 	\draw (X1b) -- (LK1);
 	\draw (X1b) -- (LV1);
 	
-	\coordinate[right of=LQ1, node distance=2.6cm](Q1){};
-	\node[below of=Q1, node distance=1.5cm](Q2){$Q = \mathbf{q}_0$};
+
+	\node[right of=LQ1, node distance=1cm](Q1){$\mathbf{q}_0$};
 	\node[right of=LK1, node distance=1cm](K1){$\mathbf{k}_0$};
 	\node[right of=LV1, node distance=1cm](V1){$\mathbf{v}_0$};
 	
 	\draw (LQ1) -- (Q1);
-	\draw (Q1) -- (Q2);
 	\draw (LK1) -- (K1);
 	\draw (LV1) -- (V1);
 	
@@ -233,11 +259,16 @@ The computations made by each attention head is represented on figure~\ref{fig:e
 	\draw (LK3) -- (K3);
 	\draw (LV3) -- (V3);
 	
-	\coordinate[right of=K1, node distance=0.3cm](TOP){};
+	\coordinate[right of=Q1, node distance=0.3cm](TOP){};
 	\coordinate[right of=V3, node distance=0.3cm](BOT){};
 	\draw[decorate,decoration={brace}] (TOP) -- node[left=5pt]{} (BOT);
 	
-	\node[right of=X2, text width=3cm, node distance=5.5cm, below=-1.0cm](EQ){\footnotesize \[K = \left( \begin{matrix}
+	\node[right of=X2, text width=3cm, node distance=5.5cm](EQ){
+		\footnotesize \[Q = \left( \begin{matrix}
+		\mathbf{q}_0
+		\end{matrix} \right)\]
+		\\
+		\footnotesize \[K = \left( \begin{matrix}
 		\mathbf{k}_0 \\
 		\vdots \\
 		\mathbf{k}_{n}
@@ -291,19 +322,48 @@ The resulting tensor is then added to the input as in residual networks.
 
 
 \section{Experiments}
-\subsection{The intersection task}
+\subsection{Description of the environment}
 
-We consider a situation where interactions between vehicles is important: crossing an unsignalized intersection.
+In this application, we use the \href{https://github.com/eleurent/highway-env}{highway-env} environment \citep{highway-env} for simulated highway driving and behavioural decision-making. We propose a new task where vehicles must interact significantly with each others: a four-way intersection. The scene, composed of two roads crossing perpendicularly, is populated with several traffic participants initialized with random positions, velocities, and destinations. As in \citep{highway-env}, these vehicle are simulated with the Kinematic Bicycle Model, their lateral control is achieved by a low-level steering controller and their longitudinal behaviour follows the Intelligent Driver Model. However, this model only considers same-lane interactions and special care was required to prevent the lateral collisions at the intersection. To that end, we implemented the following simplistic behaviour: each vehicle predicts the future positions of its neighbours over a three-second horizon by using a constant velocity model. In case of predicted collision with a neighbour, the yielding vehicle is determined randomly and must brake until the collision prediction ceases. 
 
-To that end, we use the highway-env environment and propose a novel intersection task.
+In this context, the agent must drive a vehicle by controlling its acceleration chosen from a finite set of actions $A = \{\texttt{SLOWER}, \texttt{NO-OP}, \texttt{FASTER}\}$. The lateral control is performed automatically by a low-level controller, such that the problem complexity is focused on the high-level interactions with other vehicles, namely the decision to either yield or take way. The agent is rewarded by $1$ when it drives at maximum velocity, $0$ otherwise, and by $-5$ when a collision occurs.
 
-- The intersection: cross (North/South/East/West), single lane or 2 lane ?
-- The other vehicles: are spawned randomly, and plan a route to a random direction.
-Follow a Kinematic Bicycle Model, lane keeping with a low-level steering controller, longitudinal control with IDM
+\subsection{Agents}
 
+\subsection{Results}
 
-\subsection{The baselines}
-\subsection{Performances}
+\begin{table}
+	\centering
+	\begin{tabular}{lcc}
+		\toprule
+		Architecture & MLP & Ego-Attention \\
+		\midrule 
+		Layers sizes & [128, 128] & [64, 64], 64, [64, 64] \\
+		Number of parameters & \textbf{3.0e4} & 3.4e4 \\
+		Training Time (w.r.t. MLP) & \textbf{1} & 1.25 \\
+		Mean total reward & 3.6 & \textbf{6.4} \\ 
+		\bottomrule
+	\end{tabular}
+\end{table}
+
+\begin{figure}
+	\centering
+	\begin{subfigure}[t]{.65\linewidth}
+		\centering\includegraphics[width=\linewidth]{img/total_rewards}
+		\caption{Cumulative reward}
+	\end{subfigure}
+\\
+	\begin{subfigure}[t]{.65\linewidth}
+		\centering\includegraphics[width=\linewidth]{img/total_length}
+		\caption{Episode length}
+	\end{subfigure}
+\\
+	\begin{subfigure}[t]{.65\linewidth}
+		\centering\includegraphics[width=\linewidth]{img/collision}
+		\caption{Probability of collision}
+	\end{subfigure}
+\end{figure}
+
 \subsection{Attention interpretation}
 
 Additional videos are available at \url{http://url.github.io}
@@ -317,6 +377,10 @@ Go at the end of the paper. Do not include acknowledgments in the anonymized
 submission, only in the final paper.
 
 \section*{References}
+
+\bibliographystyle{named}
+\bibliography{references}
+
 
 
 
