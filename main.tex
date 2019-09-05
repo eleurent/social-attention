@@ -37,6 +37,8 @@
 \usepackage{pgfplots}
 \usetikzlibrary{intersections}
 \usepackage{subcaption}
+\usepackage[flushleft]{threeparttable}
+\usepackage{cases}
 
 \input{mathdef}
 
@@ -97,22 +99,11 @@
 
 \section{Introduction}
 
-Automated Decision Making
-Modular pipeline: perception, high level representation, decision: behaviour planning, trajectory, control
-large litterature on perception
-trajectory optimization and control is well understood
+In the last decades, the problem of \emph{behavioural planning} -- that is, high-level decision-making in the context of autonomous driving -- has arguably received less attention and seen less progress than the other components of the typical robotics pipeline: perception and control \citep{architecture}. Indeed, the vast majority of existing systems still rely on hand-crafted rules encoded as Finite State Machines \citep{fsm}. As a result, only a narrow set of specified use-cases are addressed as these methods cannot scale to more complex scenes, especially when the decision-making process involves interacting with other human drivers whose behaviour is uncertain and difficult to model explicitly.
 
-behaviour planning by rule-based systems, fsm
-but behaviour planning is difficult, complex scenes, in particular interactions with other drivers difficult to model explicitly.
- -> leverage (deep) learning method
-Learning from demonstration: nice results for lane keeping, not so much for interaction, also require costly demonstration . 
+This observation has led the community to turn to learning-based methods, which bear the promise of leveraging data to automatically learn a complex driving policy. In the \emph{imitation learning} approach, a policy can be trained in a supervised setting to imitate human driving decisions \citep{supervised, waymo}. Because the cost of human driving data collection at large scale can be prohibitive, another promising approach is train a policy in simulation using reinforcement learning \citep{examples}.
 
-Conversely, leverage simulation:
-Reinforcement learning:
-Framing as an MDP, choose a good representation.
-List of vehicles with their coordinates 
-but variable size, + combinatorial representation
-Occupancy grid / images : fixed size, tradeoff:  low accuracy vs exploding size
+Beyond the choice of reinforcement learning algorithm, the formalization of the problem as a \emph{Markov Decision Process} (MDP) plays an important part in the design of the system. In particular, the choice of state and action spaces can have a significant influence on the performance of resulting policy. Describing a driving scene typically involves choosing a representation the road, signalization, and vehicles. The simplest form: a list of vehicles with their coordinates, orientations, velocities. But variable size and order dependent. Another common format is a spatial matrix, either cartesian (images, occupancy grid) or polar (distances in angular sectors). Fixed size and order independent, but accuracy/size tradeoff. Challenge: keep a small state size, but enforce that the model is invariant to permutations.
 
 Contributions:
 - We propose an attention-based architecture for decision-making involving social interactions, that accounts for two-way interactions between the ego-vehicle and every other traffic participant
@@ -120,14 +111,14 @@ Contributions:
 
 \section{Background and Related Work}
 
-\paragraph{Model-free deep reinforcement learning} Reinforcement Learning (RL) is a general framework for decision-making under uncertainty. It frames the learning objective as the optimal control of a Markov Decision Process  $(S, A, P, R, \gamma)$ with measurable state space $S$, action space $A$, unknown reward function $R\in\Real^{S \times A}$, and unknown dynamics $P\in \cM(S)^{S \times A}$, where $\cM(\mathcal{X})$ denotes the probability measures over a set $\mathcal{X}$. We seek a policy $\pi\in\cM(A)^S$ with maximal expected $\gamma$-discounted cumulative reward, called the value function $V^\pi$. Formally,
+\paragraph{Model-free deep reinforcement learning} Reinforcement Learning is a general framework for sequential decision-making under uncertainty. It frames the learning objective as the optimal control of a Markov Decision Process $(S, A, P, R, \gamma)$ with measurable state space $S$, action space $A$, unknown reward function $R\in\Real^{S \times A}$, and unknown dynamics $P\in \cM(S)^{S \times A}$, where $\cM(\mathcal{X})$ denotes the probability measures over a set $\mathcal{X}$. The objective is to find a policy $\pi\in\cM(A)^S$ with maximal expected $\gamma$-discounted cumulative reward, called the value function $V^\pi$. Formally,
 
 \begin{align*}
 V^\pi(s) &\eqdef \expectedvalue\left[\sum_{t=0}^\infty \gamma^t R(s_t, a_t)\condbar s_0=s, a_t\sim \pi(a_t|s_t), s_{t+1}\sim P(s_{t+1}|s_t, a_t)\right]\\
 Q^\pi(s, a) &\eqdef R(s, a) + \gamma \expectedvalueover{s'\sim P(s'|s, a)} V^\pi(s')
 \end{align*}
 
-The optimal action-value function $Q^* =  \max_\pi Q^\pi(s)$ satisfies the Bellman Optimality Equation:
+The optimal action-value function $Q^* =  \max_\pi Q^\pi(s)$ satisfies the Bellman Optimality Equation \citep{bellman}:
 \begin{equation*}
 Q^*(s, a) = (\cT Q^*) (s, a) \eqdef \expectedvalueover{s'\sim P(s'|s, a)} \max_{a'\in A} \left[R(s, a) + \gamma Q^*(s', a')\right]
 \end{equation*}
@@ -136,16 +127,58 @@ As $Q^*$ is a fixed-point of the Bellman Operator $\cT$ -- which is a contractio
 
 \paragraph{State-representation for social interactions}{
 
+A vehicle driving on a road can be described in the most general way by it's continuous position, heading and velocity. The composite state (or joint-state) of a road traffic with one ego-vehicle (denoted $X_0$) and N other vehicles can then be described by the set of the states of all vehicles.
 
-In the state:
-Kinematics
-Not fixed size
-Occupancy grid
+\begin{equation*}
+s = \left\lbrace s_k \right\rbrace_{k \in [0, N]}\qquad
+,\text{where}\qquad
+s_k = \begin{bmatrix}
+x_k & y_k & v^x_k & v^y_k & \cos\psi_k & \sin \psi_k
+\end{bmatrix}^T
+\end{equation*}
 
-In the model:
 
-Weight sharing ?
-Socially aware}
+\begin{figure}[tp]
+	\centering
+	\includegraphics[width=0.25\textwidth]{img/coordinates}
+	\includegraphics[width=0.25\textwidth]{img/map}
+	\caption{The continuous kinematics, and spatial grid representations}
+\end{figure}
+
+The size of this state-space is $\mathbb{R}^{6(N+1)}$.
+
+This representation is used in \citep{Forbes1995, Wheeler2015, Bai2015, Gindele2015, Song2016, Sunberg2017, Paxton2017, Lee2017, Shalev-Shwartz2017, Galceran2017, Chen2017, Paxton2017}.
+
+
+This encoding is efficient in the sense that it uses the smallest quantity of information necessary to represent the scene. However, it lacks two important properties. First, its size varies with the number of vehicles, which can be problematic for the sake of function approximation which often expects constant-sized inputs but also to because of the growing computational complexity when more vehicles are present. Second, we expect a driving policy to be \emph{permutation invariant}, i.e. not to be dependent on the order in which all vehicles in the traffic are listed. Ideally, this property should be enforced instead of relying on data augmentation to cover the $N!$ possible permutations of any given traffic state. Formally, we require that 
+\begin{equation}
+\pi(\cdot|(s_1,\dotsc,s_N)) = \pi(\cdot|(s_{\sigma(1)},\dotsc,s_{\sigma(N)})) \quad\quad\quad \forall\sigma \in \mathfrak{S}_N
+\end{equation}
+
+These limitations are addressed by the spatial matrix representation, that uses a different approach for representing a quantity $z$ localized in a space $X$. Instead of explicitly representing spatial dimensions as variables $x$ within a state $\{s_k=(x_k,z_k)\}_{k\in[0,N]}$ indexed on the vehicles, they are represented implicitly through the layout of several variables $z_i$ organized in a grid-like structure indexed on a quantization of the space $X$.
+
+\begin{equation}
+X = \underset{i\in I}{\oplus} X_i
+\end{equation}
+
+\begin{equation}
+s_{i} = \begin{cases}
+z_k & if \exists k\in[1,N] s.t. x_k \in X_i \\
+0 & else
+\end{cases}
+\end{equation}
+
+The $z$ variable often corresponds to mere presence information (0-1) but can also include additional channels such as heading and velocity.
+The size of this state space is then $|Z|^{|I|}$.
+This representation is used in \citep{Mukadam2018, Isele2017, Fridman2018}.
+
+TODO: Can also include other layers, and top-view images
+State dimensionality is |I| = product(Size / Accuracy)
+
+Transition:
+This permutation invariance property can be implemented within the policy architecture, as done in \citep{Chen2017} or \citep{Qi2016}, but also directly in the state representation.
+Weight sharing and reduce operator that is \citep{Socially aware, point_net}.
+A particular instantiation of this idea: attention.
 
 
 \paragraph{Attention mechanisms} {in neural networks have been able to introduce inter-dependencies within a variable number of inputs.
@@ -332,18 +365,26 @@ In this context, the agent must drive a vehicle by controlling its acceleration 
 
 \subsection{Results}
 
+
 \begin{table}
 	\centering
+	\begin{threeparttable}
+    \caption{Results}
 	\begin{tabular}{lcc}
 		\toprule
 		Architecture & MLP & Ego-Attention \\
 		\midrule 
 		Layers sizes & [128, 128] & [64, 64], 64, [64, 64] \\
 		Number of parameters & \textbf{3.0e4} & 3.4e4 \\
-		Training Time (w.r.t. MLP) & \textbf{1} & 1.25 \\
+		Inference Time$^*$ & \textbf{1} & 1.25 \\
 		Mean total reward & 3.6 & \textbf{6.4} \\ 
 		\bottomrule
 	\end{tabular}
+	\begin{tablenotes}
+		\small
+		\item $^*$ with respect to MLP.
+	\end{tablenotes}
+	\end{threeparttable}
 \end{table}
 
 \begin{figure}
