@@ -99,11 +99,11 @@
 
 \section{Introduction}
 
-In the last decades, the problem of \emph{behavioural planning} -- that is, high-level decision-making in the context of autonomous driving -- has arguably received less attention and seen less progress than the other components of the typical robotics pipeline: perception and control \citep{architecture}. Indeed, the vast majority of existing systems still rely on hand-crafted rules encoded as Finite State Machines \citep{fsm}. As a result, only a narrow set of specified use-cases are addressed as these methods cannot scale to more complex scenes, especially when the decision-making process involves interacting with other human drivers whose behaviour is uncertain and difficult to model explicitly.
+In the last decades, the problem of \emph{behavioural planning} -- that is, high-level decision-making in the context of autonomous driving -- has arguably received less attention and seen less progress than the other components of the typical robotics pipeline: perception and control \citep{Gonzalez2016}. Indeed, the vast majority of existing systems still rely on hand-crafted rules encoded as Finite State Machines \citep{Paden2016}. As a result, only a narrow set of specified use-cases are addressed as these methods cannot scale to more complex scenes, especially when the decision-making process involves interacting with other human drivers whose behaviour is uncertain and difficult to model explicitly.
 
-This observation has led the community to turn to learning-based methods, which bear the promise of leveraging data to automatically learn a complex driving policy. In the \emph{imitation learning} approach, a policy can be trained in a supervised setting to imitate human driving decisions \citep{supervised, waymo}. Because the cost of human driving data collection at large scale can be prohibitive, another promising approach is train a policy in simulation using reinforcement learning \citep{examples}.
+This observation has led the community to turn to learning-based methods, which bear the promise of leveraging data to automatically learn a complex driving policy. In the imitation learning approach, a policy can be trained in a supervised manner to imitate human driving decisions \citep{Pomerleau1989, Ross2011, Bojarski2016, Xu2016, Eraqi2017, Codevilla2017, Rehder2017c, Rezagholiradeh2018, Bansal2018}. Because the cost of human driving data collection at large scale can be prohibitive, another promising approach is train a policy in simulation using reinforcement learning \citep{Cardamone2009, Ross2011}.
 
-Beyond the choice of reinforcement learning algorithm, the formalization of the problem as a \emph{Markov Decision Process} (MDP) plays an important part in the design of the system. In particular, the choice of state and action spaces can have a significant influence on the performance of resulting policy. Describing a driving scene typically involves choosing a representation the road, signalization, and vehicles. The simplest form: a list of vehicles with their coordinates, orientations, velocities. But variable size and order dependent. Another common format is a spatial matrix, either cartesian (images, occupancy grid) or polar (distances in angular sectors). Fixed size and order independent, but accuracy/size tradeoff. Challenge: keep a small state size, but enforce that the model is invariant to permutations.
+Beyond the choice of reinforcement learning algorithm, the formalization of the problem as a Markov Decision Process (MDP) plays an important part in the design of the system. In particular, the choice of state and action spaces can have a significant influence on the performance of resulting policy. Describing a driving scene typically involves choosing a representation the road and vehicles. The simplest form: a list of vehicles with their coordinates, orientations, velocities. But variable size and order-dependent. Another common format is a spatial matrix, either Cartesian (images, occupancy grid) or polar (distances in angular sectors). Fixed size and order independent, but accuracy/size tradeoff. Challenge: keep a small state size, but enforce that the model is invariant to permutations.
 
 Contributions:
 - We propose an attention-based architecture for decision-making involving social interactions, that accounts for two-way interactions between the ego-vehicle and every other traffic participant
@@ -127,11 +127,11 @@ As $Q^*$ is a fixed-point of the Bellman Operator $\cT$ -- which is a contractio
 
 \paragraph{State-representation for social interactions}{
 
-A vehicle driving on a road can be described in the most general way by it's continuous position, heading and velocity. The composite state (or joint-state) of a road traffic with one ego-vehicle (denoted $X_0$) and N other vehicles can then be described by the set of the states of all vehicles.
+A vehicle driving on a road can be described in the most general way by it's continuous position, heading and velocity. The composite state (or joint-state) of a road traffic with one ego-vehicle (denoted $s_0$) and N other vehicles can then be described by the set of the states of all vehicles.
 
 \begin{equation*}
 s = \left\lbrace s_k \right\rbrace_{k \in [0, N]}\qquad
-,\text{where}\qquad
+\text{where}\qquad
 s_k = \begin{bmatrix}
 x_k & y_k & v^x_k & v^y_k & \cos\psi_k & \sin \psi_k
 \end{bmatrix}^T
@@ -142,42 +142,23 @@ x_k & y_k & v^x_k & v^y_k & \cos\psi_k & \sin \psi_k
 	\centering
 	\includegraphics[width=0.25\textwidth]{img/coordinates}
 	\includegraphics[width=0.25\textwidth]{img/map}
-	\caption{The continuous kinematics, and spatial grid representations}
+	\caption{The coordinates (left) and spatial-grid (right) representations}
 \end{figure}
 
-The size of this state-space is $\mathbb{R}^{6(N+1)}$.
-
-This representation is used in \citep{Forbes1995, Wheeler2015, Bai2015, Gindele2015, Song2016, Sunberg2017, Paxton2017, Lee2017, Shalev-Shwartz2017, Galceran2017, Chen2017, Paxton2017}.
+This representation is used in \citep{Bai2015, Gindele2015, Song2016, Sunberg2017, Paxton2017, Galceran2017, Chen2017}.
 
 
-This encoding is efficient in the sense that it uses the smallest quantity of information necessary to represent the scene. However, it lacks two important properties. First, its size varies with the number of vehicles, which can be problematic for the sake of function approximation which often expects constant-sized inputs but also to because of the growing computational complexity when more vehicles are present. Second, we expect a driving policy to be \emph{permutation invariant}, i.e. not to be dependent on the order in which all vehicles in the traffic are listed. Ideally, this property should be enforced instead of relying on data augmentation to cover the $N!$ possible permutations of any given traffic state. Formally, we require that 
-\begin{equation}
+This encoding is efficient in the sense that it uses the smallest quantity of information necessary to represent the scene. However, it lacks two important properties. First, its size varies with the number of vehicles which can be problematic for the sake of function approximation which often expects constant-sized inputs, but also for concerns of varying computational complexity. Second, we expect a driving policy to be \emph{permutation invariant}, i.e. not to be dependent on the order in which other traffic participants are listed. Ideally, this property should be enforced and not relying on the coverage of the $N!$ possible permutations of any given traffic state. Formally, we require that:
+\begin{equation*}
 \pi(\cdot|(s_1,\dotsc,s_N)) = \pi(\cdot|(s_{\sigma(1)},\dotsc,s_{\sigma(N)})) \quad\quad\quad \forall\sigma \in \mathfrak{S}_N
-\end{equation}
+\end{equation*}
 
-These limitations are addressed by the spatial matrix representation, that uses a different approach for representing a quantity $z$ localized in a space $X$. Instead of explicitly representing spatial dimensions as variables $x$ within a state $\{s_k=(x_k,z_k)\}_{k\in[0,N]}$ indexed on the vehicles, they are represented implicitly through the layout of several variables $z_i$ organized in a grid-like structure indexed on a quantization of the space $X$.
-
-\begin{equation}
-X = \underset{i\in I}{\oplus} X_i
-\end{equation}
-
-\begin{equation}
-s_{i} = \begin{cases}
-z_k & if \exists k\in[1,N] s.t. x_k \in X_i \\
-0 & else
-\end{cases}
-\end{equation}
-
-The $z$ variable often corresponds to mere presence information (0-1) but can also include additional channels such as heading and velocity.
-The size of this state space is then $|Z|^{|I|}$.
-This representation is used in \citep{Mukadam2018, Isele2017, Fridman2018}.
-
-TODO: Can also include other layers, and top-view images
-State dimensionality is |I| = product(Size / Accuracy)
+A popular way to address this limitations is to use a spatial matrix representation. Instead of explicitly representing spatial information as variables $x, y$ within the state $\{s_k=(x_k,y_k,f_k)\}_{k\in[0,N]}$ indexed on the vehicles, they are instead represented implicitly through the layout of several feature variables $f_ij$ organized in a tensor, where the $i,j$ indexes refer to cells of a quantization of the 2D-space. Note that the size of this tensor is related to the area covered divided by the length of the quantization, which denotes a trade-off between accuracy and computational burden. 
+In an occupancy grid, the $f$ features contains presence information (0-1) and additional channels such as velocity and heading, as in \citep{Isele2017, Fridman2018, Bansal2018, Rehder2017c}. Another example is the use of top-view RGB images \citep{Bagnell2010, Rehder2017, Rehder2017c, Liu2018}.
 
 Transition:
 This permutation invariance property can be implemented within the policy architecture, as done in \citep{Chen2017} or \citep{Qi2016}, but also directly in the state representation.
-Weight sharing and reduce operator that is \citep{Socially aware, point_net}.
+Weight sharing and reduce operator that is invariant to permutation eg max in \citep{Chen2017} and sum in \citep{point_net}.
 A particular instantiation of this idea: attention.
 
 
@@ -355,7 +336,7 @@ The resulting tensor is then added to the input as in residual networks.
 
 
 \section{Experiments}
-\subsection{Description of the environment}
+\paragraph{The environment}
 
 In this application, we use the \href{https://github.com/eleurent/highway-env}{highway-env} environment \citep{highway-env} for simulated highway driving and behavioural decision-making. We propose a new task where vehicles must interact significantly with each others: a four-way intersection. The scene, composed of two roads crossing perpendicularly, is populated with several traffic participants initialized with random positions, velocities, and destinations. As in \citep{highway-env}, these vehicle are simulated with the Kinematic Bicycle Model, their lateral control is achieved by a low-level steering controller and their longitudinal behaviour follows the Intelligent Driver Model. However, this model only considers same-lane interactions and special care was required to prevent the lateral collisions at the intersection. To that end, we implemented the following simplistic behaviour: each vehicle predicts the future positions of its neighbours over a three-second horizon by using a constant velocity model. In case of predicted collision with a neighbour, the yielding vehicle is determined randomly and must brake until the collision prediction ceases. 
 
@@ -370,39 +351,36 @@ In this context, the agent must drive a vehicle by controlling its acceleration 
 	\centering
 	\begin{threeparttable}
     \caption{Results}
-	\begin{tabular}{lcc}
+	\begin{tabular}{lccc}
 		\toprule
-		Architecture & MLP & Ego-Attention \\
+		Architecture & MLP Coordinates & MLP Grid & Ego-Attention \\
 		\midrule 
-		Layers sizes & [128, 128] & [64, 64], 64, [64, 64] \\
-		Number of parameters & \textbf{3.0e4} & 3.4e4 \\
-		Inference Time$^*$ & \textbf{1} & 1.25 \\
-		Mean total reward & 3.6 & \textbf{6.4} \\ 
+		Layers sizes & [128, 128] &  [64, 64] & [64, 64], 64, [64, 64] \\
+		Number of parameters & \textbf{3.0e4} & ? & 3.4e4 \\
+		Mean total reward & 3.7 & 4.5 & \textbf{6.4} \\ 
 		\bottomrule
 	\end{tabular}
-	\begin{tablenotes}
-		\small
-		\item $^*$ with respect to MLP.
-	\end{tablenotes}
+%	\begin{tablenotes}
+%		\small
+%		\item 
+%	\end{tablenotes}
 	\end{threeparttable}
 \end{table}
 
 \begin{figure}
 	\centering
-	\begin{subfigure}[t]{.65\linewidth}
-		\centering\includegraphics[width=\linewidth]{img/total_rewards}
-		\caption{Cumulative reward}
+	\begin{subfigure}[t]{.49\linewidth}
+		\centering\includegraphics[width=\linewidth]{img/total_reward}
 	\end{subfigure}
-\\
-	\begin{subfigure}[t]{.65\linewidth}
-		\centering\includegraphics[width=\linewidth]{img/total_length}
-		\caption{Episode length}
+	\begin{subfigure}[t]{.49\linewidth}
+		\centering\includegraphics[width=\linewidth]{img/length}
 	\end{subfigure}
-\\
-	\begin{subfigure}[t]{.65\linewidth}
-		\centering\includegraphics[width=\linewidth]{img/collision}
-		\caption{Probability of collision}
+	\begin{subfigure}[t]{.49\linewidth}
+		\centering\includegraphics[width=\linewidth]{img/velocity}
 	\end{subfigure}
+	\begin{subfigure}[t]{.49\linewidth}
+	\centering\includegraphics[width=\linewidth]{img/distance}
+    \end{subfigure}
 \end{figure}
 
 \subsection{Attention interpretation}
