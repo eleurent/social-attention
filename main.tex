@@ -5,11 +5,11 @@
 % before loading neurips_2019
 
 % ready for submission
-%\usepackage{neurips_2019_ml4ad}
+\usepackage[nonatbib]{neurips_2019_ml4ad}
 
 % to compile a preprint version, e.g., for submission to arXiv, add add the
 % [preprint] option:
- \usepackage[preprint, nonatbib]{neurips_2019_ml4ad}
+% \usepackage[preprint, nonatbib]{neurips_2019_ml4ad}
 
 % to compile a camera-ready version, add the [final] option, e.g.:
 % \usepackage[final]{neurips_2019_ml4ad}
@@ -32,6 +32,7 @@
 \usepackage{amssymb}
 \usepackage{graphicx}
 \usepackage{tikz}
+\usepackage{xspace}
 \usepackage{float}
 \usetikzlibrary{arrows,automata}
 \usepackage{pgfplots}
@@ -39,6 +40,7 @@
 \usepackage{subcaption}
 \usepackage[flushleft]{threeparttable}
 \usepackage{cases}
+\usepackage{multirow}
 
 \input{mathdef}
 
@@ -60,7 +62,6 @@
   SequeL team, INRIA Lille -- Nord Europe\\
   Renault Group, France\\
   \texttt{edouard.leurent@inria.fr} \\
-  % examples of more authors
    \And
   Jean Mercat$^*$ \\
   Laboratoire des signaux et des syst\`emes, Centrale-Sup\'elec\\
@@ -90,11 +91,7 @@
 \maketitle
 
 \begin{abstract}
-  The abstract paragraph should be indented \nicefrac{1}{2}~inch (3~picas) on
-  both the left- and right-hand margins. Use 10~point type, with a vertical
-  spacing (leading) of 11~points.  The word \textbf{Abstract} must be centered,
-  bold, and in point size 12. Two line spaces precede the abstract. The abstract
-  must be limited to one paragraph.
+  TODO
 \end{abstract}
 
 \section{Introduction}
@@ -107,7 +104,7 @@ Beyond the choice of reinforcement learning algorithm, the formalization of the 
 
 Contributions:
 - We propose an attention-based architecture for decision-making involving social interactions, that accounts for two-way interactions between the ego-vehicle and every other traffic participant
-- We evaluate our model on a challenging intersection-crossing task involving up to 20 vehicles perceived simultaneously.
+- We evaluate our model on a challenging intersection-crossing task involving up to 15 vehicles perceived simultaneously.
 
 \section{Background and Related Work}
 
@@ -145,34 +142,23 @@ x_k & y_k & v^x_k & v^y_k & \cos\psi_k & \sin \psi_k
 	\caption{The coordinates (left) and spatial-grid (right) representations}
 \end{figure}
 
-This representation is used in \citep{Bai2015, Gindele2015, Song2016, Sunberg2017, Paxton2017, Galceran2017, Chen2017}.
+For instance, this representation is used in \citep{Bai2015, Gindele2015, Song2016, Sunberg2017, Paxton2017, Galceran2017, Chen2017}.
 
 
-This encoding is efficient in the sense that it uses the smallest quantity of information necessary to represent the scene. However, it lacks two important properties. First, its size varies with the number of vehicles which can be problematic for the sake of function approximation which often expects constant-sized inputs, but also for concerns of varying computational complexity. Second, we expect a driving policy to be \emph{permutation invariant}, i.e. not to be dependent on the order in which other traffic participants are listed. Ideally, this property should be enforced and not relying on the coverage of the $N!$ possible permutations of any given traffic state. Formally, we require that:
+This encoding is efficient in the sense that it uses the smallest quantity of information necessary to represent the scene. However, it lacks two important properties. First, its size varies with the number of vehicles which can be problematic for the sake of function approximation which often expects constant-sized inputs, but also for concerns of varying computational complexity. Second, we expect a driving policy $\pi$ to be \emph{permutation invariant}, i.e. not to be dependent on the order in which other traffic participants are listed. Ideally, this property should be enforced and not approximated by relying on the coverage of the $N!$ possible permutations $\tau$ of any given traffic state. Formally, we require that:
 \begin{equation*}
-\pi(\cdot|(s_1,\dotsc,s_N)) = \pi(\cdot|(s_{\sigma(1)},\dotsc,s_{\sigma(N)})) \quad\quad\quad \forall\sigma \in \mathfrak{S}_N
+\pi(\cdot|(s_0, s_1,\dotsc,s_N)) = \pi(\cdot|(s_0, s_{\tau(1)},\dotsc,s_{\tau(N)})) \quad\quad\quad \forall\tau \in \mathfrak{S}_N
 \end{equation*}
 
-A popular way to address this limitations is to use a spatial matrix representation. Instead of explicitly representing spatial information as variables $x, y$ within the state $\{s_k=(x_k,y_k,f_k)\}_{k\in[0,N]}$ indexed on the vehicles, they are instead represented implicitly through the layout of several feature variables $f_ij$ organized in a tensor, where the $i,j$ indexes refer to cells of a quantization of the 2D-space. Note that the size of this tensor is related to the area covered divided by the length of the quantization, which denotes a trade-off between accuracy and computational burden. 
+A popular way to address this limitations is to use a spatial matrix representation. Instead of explicitly representing spatial information as variables $x, y$ along with other features $f$ directly inside the state $\{s_k=(x_k,y_k,f_k)\}_{k\in[0,N]}$ indexed on the vehicles, they are instead represented implicitly through the layout of several feature variables $f_ij$ organized in a tensor structure, where the $i,j$ indexes refer to the cells of a quantization of the 2D-space. Note that the size of this tensor is related to the area covered divided by the length of the quantization, which reflects a trade-off between accuracy and computational load.
 In an occupancy grid, the $f$ features contains presence information (0-1) and additional channels such as velocity and heading, as in \citep{Isele2017, Fridman2018, Bansal2018, Rehder2017c}. Another example is the use of top-view RGB images \citep{Bagnell2010, Rehder2017, Rehder2017c, Liu2018}.
 
-Transition:
-This permutation invariance property can be implemented within the policy architecture, as done in \citep{Chen2017} or \citep{Qi2016}, but also directly in the state representation.
-Weight sharing and reduce operator that is invariant to permutation eg max in \citep{Chen2017} and sum in \citep{point_net}.
-A particular instantiation of this idea: attention.
+
+This permutation invariance property can also be implemented within the policy architecture. A general technique to achieve this is to treat each entity similarly in the early stages -- e.g. through weight sharing -- before reducing them with a projection operator that is itself invariant to permutations, for instance a max-pooling as in \citep{Chen2017} or a sum as in \citep{Qi2016}. A particular instantiation of this idea is the use of attention mechanisms.
 
 
-\paragraph{Attention mechanisms} {in neural networks have been able to introduce inter-dependencies within a variable number of inputs.
-It has been used for pedestrian trajectory forecasting in~\cite{Vemula2018} with spatiotemporal graphs and
-in~\cite{Sadeghian2019CVPR} with spatial and social attention using a generative neural network.
-In~\cite{Sadeghian2018ECCV}, attention over top-view road scene images for car trajectory forecasting is used.
-Multi-head attention mechanism has been developed in~\cite{Vaswani2017} for sentence translation.
-In~\cite{Messaoud2019} a mechanism called non-local multi-head attention is developed.
-However, this is a spatial attention that does not allow vehicle-to-vehicle attention.
-
-In the present work, we use a multi-head social attention mechanism working together with
-recurrent neural networks to forecast in the form of sequences of multi-modal position probability density
-functions.}
+\paragraph{Attention mechanisms} {The attention architecture was introduced to enable neural networks to discover inter-dependencies within a variable number of inputs.
+It has been used for pedestrian trajectory forecasting in~\cite{Vemula2018} with spatiotemporal graphs and in~\cite{Sadeghian2019CVPR} with spatial and social attention using a generative neural network. In~\cite{Sadeghian2018ECCV}, attention over top-view road scene images for car trajectory forecasting is used. Multi-head attention mechanism has been developed in~\cite{Vaswani2017} for sentence translation. In~\cite{Messaoud2019} a mechanism called non-local multi-head attention is developed. However, this is a spatial attention that does not allow vehicle-to-vehicle attention. In the present work, we use a multi-head social attention mechanism...}
 
 \section{Model Architecture}
 
@@ -190,7 +176,7 @@ Motivation:
 	\node(X1){ego};
 	\node[below of=X1, node distance=0.7cm](X2){vehicle$_{1}$};
 	\node[below of=X2, node distance=0.6cm](X3){$\vdots$};
-	\node[below of=X3, node distance=0.7cm](X4){vehicle$_{n}$};
+	\node[below of=X3, node distance=0.7cm](X4){vehicle$_{N}$};
 	
 	\node[draw, right of=X1, node distance=1.8cm, rectangle](ENC1){Encoder};
 	\node[draw, right of=X2, node distance=1.8cm, rectangle](ENC2){Encoder};
@@ -234,7 +220,7 @@ The computations made by each attention head is represented on figure~\ref{fig:e
 	\begin{tikzpicture}[scale=1, every node/.style={scale=1}]
 	\node(X1){ego encoding};
 	\node[below of=X1, node distance=2cm](X2){$\vdots$};
-	\node[below of=X2, node distance=2cm](X3){vehicle$_{n}$ encoding};
+	\node[below of=X2, node distance=2cm](X3){vehicle$_{N}$ encoding};
 	
 	\coordinate[right of= X1, node distance=2cm](X1b){};
 	
@@ -313,13 +299,21 @@ The computations made by each attention head is represented on figure~\ref{fig:e
 	\label{fig:ego-attention}
 \end{figure}
 
+
+
+
+%Descriptive features, names keys $k_i$
+%The similarity of the query $q_i$ to the keys $k_j$ is assessed through a similarity measure implemented as a scalar product: $<q_i, k_j>$, $QK^T$.
+%These similarities are then normalized by a softmax $\sigma$ function and a division by $\sqrt{d_k}}$ where $d_k$ is the dimension of keys and queries. The final value is obtained.
+
+Self attention
+
 Each vehicle should pay attention to specific features from a selection of the other vehicles.
-This is made with four steps: pulling together specific features, identifying these feature collections,
-enquiring among identifiers, and gathering the results.
+This is made with three steps: ...
 Each head produces a different selection of features using a linear projection of
 the input tensor resulting in the value tensor $V$.
 To identify these features, a key tensor $K$ is associated to each value.
-Then, each vehicle must select which other vehicle to pay attention to.
+Then, each vehicle (TODO: or just the ego) must select which other vehicle to pay attention to.
 For that purpose a query $Q$ is produced to find a selection of keys.
 The match score between a key and a query is the dot product is scaled with the square root of the key
 dimension $\sqrt{d_k}$ and normalized with a softmax.
@@ -334,66 +328,86 @@ Thus, the self-attention computation for each head is written:
 The outputs from all heads are concatenated and combined with a linear layer.
 The resulting tensor is then added to the input as in residual networks.
 
+Ego attention: only the ego-vehicle produces a query, we get one output feature. We can easily see that the result is permutation invariant: indeed, a permutation $\tau$ will change the order of the rows of keys $K$ and values $V$ but will keep their correspondence. The final result is a sum of values weighted by their key-similarities, which is independent of the ordering. %$\sigma\left(Q\tau(K)^T/\sqrt{d_k}\right)\tau(V) = \tau\left(\sigma(QK^T/\sqrt{d_k})\right)\tau(V) = \sigma\left(QK^T/\sqrt{d_k}\right)V$
 
 \section{Experiments}
-\paragraph{The environment}
+\paragraph{Environment}
 
-In this application, we use the \href{https://github.com/eleurent/highway-env}{highway-env} environment \citep{highway-env} for simulated highway driving and behavioural decision-making. We propose a new task where vehicles must interact significantly with each others: a four-way intersection. The scene, composed of two roads crossing perpendicularly, is populated with several traffic participants initialized with random positions, velocities, and destinations. As in \citep{highway-env}, these vehicle are simulated with the Kinematic Bicycle Model, their lateral control is achieved by a low-level steering controller and their longitudinal behaviour follows the Intelligent Driver Model. However, this model only considers same-lane interactions and special care was required to prevent the lateral collisions at the intersection. To that end, we implemented the following simplistic behaviour: each vehicle predicts the future positions of its neighbours over a three-second horizon by using a constant velocity model. In case of predicted collision with a neighbour, the yielding vehicle is determined randomly and must brake until the collision prediction ceases. 
+In this application, we use the \href{https://github.com/eleurent/highway-env}{highway-env} environment \citep{highway-env} for simulated highway driving and behavioural decision-making. We propose a new task where vehicle-to-vehicle interaction plays a significant part: crossing a four-way intersection.
+The scene -- composed of two roads crossing perpendicularly -- is populated with several traffic participants initialized with random positions, velocities, and destinations. As in \citep{highway-env}, these vehicle are simulated with the Kinematic Bicycle Model, their lateral control is achieved by a low-level steering controller tracking a target route, and their longitudinal behaviour follows the Intelligent Driver Model. However, this model only considers same-lane interactions and special care was required to prevent lateral collisions at the intersection. To that end, we implemented the following simplistic behaviour: each vehicle predicts the future positions of its neighbours over a three-second horizon by using a constant velocity model. In case of predicted collision with a neighbour, the yielding vehicle is determined based on road priorities, and must brake until the collision prediction ceases. 
 
 In this context, the agent must drive a vehicle by controlling its acceleration chosen from a finite set of actions $A = \{\texttt{SLOWER}, \texttt{NO-OP}, \texttt{FASTER}\}$. The lateral control is performed automatically by a low-level controller, such that the problem complexity is focused on the high-level interactions with other vehicles, namely the decision to either yield or take way. The agent is rewarded by $1$ when it drives at maximum velocity, $0$ otherwise, and by $-5$ when a collision occurs.
 
-\subsection{Agents}
+\paragraph{Agents}
 
-\subsection{Results}
+TODO, see \autoref{tab:agents}.
 
 
-\begin{table}
+\begin{table}[tp]
 	\centering
 	\begin{threeparttable}
-    \caption{Results}
-	\begin{tabular}{lccc}
-		\toprule
-		Architecture & MLP Coordinates & MLP Grid & Ego-Attention \\
-		\midrule 
-		Layers sizes & [128, 128] &  [64, 64] & [64, 64], 64, [64, 64] \\
-		Number of parameters & \textbf{3.0e4} & ? & 3.4e4 \\
-		Mean total reward & 3.7 & 4.5 & \textbf{6.4} \\ 
-		\bottomrule
-	\end{tabular}
-%	\begin{tablenotes}
-%		\small
-%		\item 
-%	\end{tablenotes}
+		\caption{Characteristics of the agents}
+		\label{tab:agents}
+		\begin{tabular}{lccc}
+			\toprule
+			Architecture & \MLPC & \MLPG & \EgoAtt \\
+			\midrule 
+			Input sizes & [15, 7] & [?, ?, 7] & [1-15, 7] \\
+			Layers sizes & [128, 128] &  [64, 64] & Encoder: [64, 64] \\
+			& & & Attention $d_k$: 64\\
+			& & & Decoder: [64, 64]\\
+			Number of parameters & 3.0e4 & ? & 3.4e4 \\
+			Permutation invariant & No & Yes & Yes \\
+			\bottomrule
+		\end{tabular}
 	\end{threeparttable}
 \end{table}
 
-\begin{figure}
+\paragraph{Performances}
+
+We show in \autoref{fig:results} the evolution of the total reward, episode length and average velocity.
+The \MLPC agent learns to accelerate to earn short-term rewards, as shown by its high average velocity , but fails to exploit the information of other vehicles and crashes often, leading to shorter episodes = risky policy, worst performing.
+Conversely, the \MLPG benefits from its invariance to permutations and manages to learn to brake upon arrival at the intersection to avoid collisions (increased duration). However, it only proceeds when the intersection has been cleared (low mean velocity), resulting in an overly cautious policy, a common trait known as the freezing robot problem. Slight increase in performance.
+In stark contrast, the \EgoAtt policy quickly learns both when it must slow down at the intersection but also when it can exploit the gaps in the traffic and take way to vehicles that are far/slow enough. The overall resulting behaviour is qualitatively more nuanced and human-like.
+
+\begin{figure}[tp]
 	\centering
-	\begin{subfigure}[t]{.49\linewidth}
+	\begin{subfigure}[t]{.75\linewidth}
 		\centering\includegraphics[width=\linewidth]{img/total_reward}
 	\end{subfigure}
+\\
 	\begin{subfigure}[t]{.49\linewidth}
 		\centering\includegraphics[width=\linewidth]{img/length}
 	\end{subfigure}
 	\begin{subfigure}[t]{.49\linewidth}
 		\centering\includegraphics[width=\linewidth]{img/velocity}
 	\end{subfigure}
-	\begin{subfigure}[t]{.49\linewidth}
-	\centering\includegraphics[width=\linewidth]{img/distance}
-    \end{subfigure}
+%	\begin{subfigure}[t]{.49\linewidth}
+%	\centering\includegraphics[width=\linewidth]{img/distance}
+ %   \end{subfigure}
+ \caption{The episode total rewards, lengths, and average velocity (higher is better). We display the mean values -- along with their 95\% confidence interval -- averaged over 120 random seeds.}
+ \label{fig:results}
 \end{figure}
 
-\subsection{Attention interpretation}
+\paragraph{Attention interpretation}
+
+TODO: figure
 
 Additional videos are available at \url{http://url.github.io}
 
+\paragraph{Exploiting interaction patterns}
+The priority rules are note enforced through rewards but interactions: based on the defined road priorities, some vehicles will take way to the ego-vehicle, while others will not.
+
+By switching the priority road, the resulting policy changes: In the exact same initial state, the ego-vehicle takes way to incoming vehicles when its policy was trained on a priority road, and gives way otherwise. The only change between these two situations is the rules of interactions imposed on simulated vehicles, which showcases the ability of our proposed architecture to discover and exploit such interaction patterns.
+
+
 \section{Conclusion}
 
-\subsubsection*{Acknowledgments}
+TODO
 
-Use unnumbered third level headings for the acknowledgments. All acknowledgments
-Go at the end of the paper. Do not include acknowledgments in the anonymized
-submission, only in the final paper.
+%\subsubsection*{Acknowledgments}
+%
+%TODO
 
 \section*{References}
 
