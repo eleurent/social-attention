@@ -91,7 +91,7 @@
 \maketitle
 
 \begin{abstract}
-  TODO
+  This work addresses the design of learning architectures in the context of high-level decision making for autonomous driving in a dense traffic setting. We focus on three challenges: dealing with a varying number of nearby vehicles, being invariant to the ordering chosen to describe the scene, and accounting for the existing interactions between the traffic participants.
 \end{abstract}
 
 \section{Introduction}
@@ -140,9 +140,10 @@ x_k & y_k & v^x_k & v^y_k & \cos\psi_k & \sin \psi_k
 	\includegraphics[width=0.25\textwidth]{img/coordinates}
 	\includegraphics[width=0.25\textwidth]{img/map}
 	\caption{The coordinates (left) and spatial-grid (right) representations}
+	\label{fig:representation}
 \end{figure}
 
-For instance, this representation is used in \citep{Bai2015, Gindele2015, Song2016, Sunberg2017, Paxton2017, Galceran2017, Chen2017}.
+This representation is illustrated in \autoref{fig:representation} and was used e.g. in \citep{Bai2015, Gindele2015, Song2016, Sunberg2017, Paxton2017, Galceran2017, Chen2017}.
 
 
 This encoding is efficient in the sense that it uses the smallest quantity of information necessary to represent the scene. However, it lacks two important properties. First, its size varies with the number of vehicles which can be problematic for the sake of function approximation which often expects constant-sized inputs, but also for concerns of varying computational complexity. Second, we expect a driving policy $\pi$ to be \emph{permutation invariant}, i.e. not to be dependent on the order in which other traffic participants are listed. Ideally, this property should be enforced and not approximated by relying on the coverage of the $N!$ possible permutations $\tau$ of any given traffic state. Formally, we require that:
@@ -354,9 +355,10 @@ TODO, see \autoref{tab:agents}.
 			\midrule 
 			Input sizes & [15, 7] & [?, ?, 7] & [1-15, 7] \\
 			Layers sizes & [128, 128] &  [64, 64] & Encoder: [64, 64] \\
-			& & & Attention $d_k$: 64\\
+			& & & Attention: $d_k=64$\\
 			& & & Decoder: [64, 64]\\
 			Number of parameters & 3.0e4 & ? & 3.4e4 \\
+			Variable input size & No & No & Yes \\
 			Permutation invariant & No & Yes & Yes \\
 			\bottomrule
 		\end{tabular}
@@ -391,13 +393,16 @@ In stark contrast, the \EgoAtt policy quickly learns both when it must slow down
 
 \paragraph{Attention interpretation}
 
-TODO: figure
+This model is also more interpretable, as we can visualize the learnt attention matrix.
+
+TODO: figure yield vs take way
 
 Additional videos are available at \url{http://url.github.io}
 
 \paragraph{Exploiting interaction patterns}
 The priority rules are note enforced through rewards but interactions: based on the defined road priorities, some vehicles will take way to the ego-vehicle, while others will not.
 
+change the priority -> influences the rules of interactions -> changes the learnt behaviour.
 By switching the priority road, the resulting policy changes: In the exact same initial state, the ego-vehicle takes way to incoming vehicles when its policy was trained on a priority road, and gives way otherwise. The only change between these two situations is the rules of interactions imposed on simulated vehicles, which showcases the ability of our proposed architecture to discover and exploit such interaction patterns.
 
 
@@ -408,8 +413,6 @@ TODO
 %\subsubsection*{Acknowledgments}
 %
 %TODO
-
-\section*{References}
 
 \bibliographystyle{named}
 \bibliography{references}
