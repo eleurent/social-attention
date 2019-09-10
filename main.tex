@@ -91,19 +91,18 @@
 \maketitle
 
 \begin{abstract}
-  This work addresses the design of learning architectures in the context of high-level decision making for autonomous driving in a dense traffic setting. We focus on three challenges: dealing with a varying number of nearby vehicles, being invariant to the ordering chosen to describe the scene, and accounting for the existing interactions between the traffic participants.
+  This work addresses the design of learning architectures for behavioural planning in a dense traffic setting. We claim that three important requirements are: dealing with a varying number of nearby vehicles, being invariant to the ordering chosen to describe them, while staying accurate and compact. We observe that the two most popular representations in the literature do not fit all these criteria, and show that they perform badly on an intersection-crossing task that involves complex anticipation and negotiation skills. In contrast, we propose an attention-based architecture that enjoys all these properties while also accounting for the existing interactions between the traffic participants. We show that this architecture leads to significant improvements in performance, and that it is able to capture interactions patterns that can be visualized and qualitatively interpreted.
 \end{abstract}
 
 \section{Introduction}
 
-In the last decades, the problem of \emph{behavioural planning} -- that is, high-level decision-making in the context of autonomous driving -- has arguably received less attention and seen less progress than the other components of the typical robotics pipeline: perception and control \citep{Gonzalez2016}. Indeed, the vast majority of existing systems still rely on hand-crafted rules encoded as Finite State Machines \citep{Paden2016}. As a result, only a narrow set of specified use-cases are addressed as these methods cannot scale to more complex scenes, especially when the decision-making process involves interacting with other human drivers whose behaviour is uncertain and difficult to model explicitly.
+In the last decades, the problem of \emph{behavioural planning} -- that is, high-level decision-making in the context of autonomous driving -- has arguably received less attention and seen less progress than the other components of the typical robotics pipeline: perception and control \citep{Gonzalez2016}. Indeed, the vast majority of existing systems still rely on hand-crafted rules encoded as Finite State Machines \citep{Paden2016}. As a result, only a narrow set of specified use-cases are addressed as these methods cannot scale to more complex scenes, especially when the decision-making process involves interacting with other human drivers whose behaviours are uncertain and difficult to model explicitly.
 
 This observation has led the community to turn to learning-based methods, which bear the promise of leveraging data to automatically learn a complex driving policy. In the imitation learning approach, a policy can be trained in a supervised manner to imitate human driving decisions \citep{Pomerleau1989, Ross2011, Bojarski2016, Xu2016, Eraqi2017, Codevilla2017, Rehder2017c, Rezagholiradeh2018, Bansal2018}. Because the cost of human driving data collection at large scale can be prohibitive, another promising approach is train a policy in simulation using reinforcement learning \citep{Cardamone2009, Ross2011}.
 
-Beyond the choice of reinforcement learning algorithm, the formalization of the problem as a Markov Decision Process (MDP) plays an important part in the design of the system. In particular, the choice of state and action spaces can have a significant influence on the performance of resulting policy. Describing a driving scene typically involves choosing a representation the road and vehicles. The simplest form: a list of vehicles with their coordinates, orientations, velocities. But variable size and order-dependent. Another common format is a spatial matrix, either Cartesian (images, occupancy grid) or polar (distances in angular sectors). Fixed size and order independent, but accuracy/size tradeoff. Challenge: keep a small state size, but enforce that the model is invariant to permutations.
+Beyond the choice of reinforcement learning algorithm, the formalization of the problem as a Markov Decision Process plays an important part in the design of the system. Indeed, the definition of the state space involves choosing a representation of the driving scene. In this work, we focus in on how the vehicles are represented. In particular, we claim that the two most-widely used representations both suffer from different drawbacks: on the one hand, the \emph{list of features} representation is compact and accurate but has a varying-size and depends on the choice of ordering. On the other hand, the \emph{spatial grid} representation addresses these concerns but in return suffers from an accuracy-size trade-off.
 
-Contributions:
-- We propose an attention-based architecture for decision-making involving social interactions, that accounts for two-way interactions between the ego-vehicle and every other traffic participant
+Our contributions are the following: first, we propose an attention-based architecture for decision-making involving social interactions, that deals with the varying-size and that accounts for two-way interactions between the ego-vehicle and every other traffic participant
 - We evaluate our model on a challenging intersection-crossing task involving up to 15 vehicles perceived simultaneously.
 
 \section{Background and Related Work}
@@ -124,7 +123,7 @@ As $Q^*$ is a fixed-point of the Bellman Operator $\cT$ -- which is a contractio
 
 \paragraph{State-representation for social interactions}{
 
-A vehicle driving on a road can be described in the most general way by it's continuous position, heading and velocity. The composite state (or joint-state) of a road traffic with one ego-vehicle (denoted $s_0$) and N other vehicles can then be described by the set of the states of all vehicles.
+In order to apply a reinforcement learning algorithm such as DQN to an autonomous driving problem, a state space $S$ must first be chosen, that is, a representation of the scene. A vehicle driving on a road can be described in the most general way by it's continuous position, heading and velocity. The composite state (or joint-state) of a road traffic with one ego-vehicle (denoted $s_0$) and N other vehicles can then be described by the set of the states of all vehicles.
 
 \begin{equation*}
 s = \left\lbrace s_k \right\rbrace_{k \in [0, N]}\qquad
@@ -139,11 +138,11 @@ x_k & y_k & v^x_k & v^y_k & \cos\psi_k & \sin \psi_k
 	\centering
 	\includegraphics[width=0.25\textwidth]{img/coordinates}
 	\includegraphics[width=0.25\textwidth]{img/map}
-	\caption{The coordinates (left) and spatial-grid (right) representations}
+	\caption{The \emph{list of features} (left) and \emph{spatial grid} (right) representations}
 	\label{fig:representation}
 \end{figure}
 
-This representation is illustrated in \autoref{fig:representation} and was used e.g. in \citep{Bai2015, Gindele2015, Song2016, Sunberg2017, Paxton2017, Galceran2017, Chen2017}.
+This representation, that we call \emph{list of features}, is illustrated in \autoref{fig:representation} and was used e.g. in \citep{Bai2015, Gindele2015, Song2016, Sunberg2017, Paxton2017, Galceran2017, Chen2017}.
 
 
 This encoding is efficient in the sense that it uses the smallest quantity of information necessary to represent the scene. However, it lacks two important properties. First, its size varies with the number of vehicles which can be problematic for the sake of function approximation which often expects constant-sized inputs, but also for concerns of varying computational complexity. Second, we expect a driving policy $\pi$ to be \emph{permutation invariant}, i.e. not to be dependent on the order in which other traffic participants are listed. Ideally, this property should be enforced and not approximated by relying on the coverage of the $N!$ possible permutations $\tau$ of any given traffic state. Formally, we require that:
