@@ -31,6 +31,7 @@
 \usepackage{amsmath}
 \usepackage{amssymb}
 \usepackage{graphicx}
+\usepackage{array, makecell}
 \usepackage{tikz}
 \usepackage{xspace}
 \usepackage{float}
@@ -98,12 +99,12 @@
 
 In the last decades, the problem of \emph{behavioural planning} -- that is, high-level decision-making in the context of autonomous driving -- has arguably received less attention and seen less progress than the other components of the typical robotics pipeline: perception and control \citep{Gonzalez2016}. Indeed, the vast majority of existing systems still rely on hand-crafted rules encoded as Finite State Machines \citep{Paden2016}. As a result, only a narrow set of specified use-cases are addressed as these methods cannot scale to more complex scenes, especially when the decision-making process involves interacting with other human drivers whose behaviours are uncertain and difficult to model explicitly.
 
-This observation has led the community to turn to learning-based methods, which bear the promise of leveraging data to automatically learn a complex driving policy. In the imitation learning approach, a policy can be trained in a supervised manner to imitate human driving decisions \citep{Pomerleau1989, Ross2011, Bojarski2016, Xu2016, Eraqi2017, Codevilla2017, Rehder2017c, Rezagholiradeh2018, Bansal2018}. Because the cost of human driving data collection at large scale can be prohibitive, another promising approach is train a policy in simulation using reinforcement learning \citep{Cardamone2009, Ross2011}.
+This observation has led the community to turn to learning-based methods, which bear the promise of leveraging data to automatically learn a complex driving policy. In the imitation learning approach, a policy can be trained in a supervised manner to imitate human driving decisions \citep[e.g.][]{Pomerleau1989, Ross2011, Bojarski2016, Xu2016, Eraqi2017, Codevilla2017, Rehder2017c, Rezagholiradeh2018, Rhinehart2018, Bansal2018, Rhinehart2019}. Because the cost of human driving data collection at large scale can be prohibitive, another promising approach is train a policy in simulation using reinforcement learning \citep[e.g.][]{Cardamone2009, Ross2011, Mukadam2017, Chen2017, Isele_2018, Ha2018, Kendall2019}.
 
 Beyond the choice of reinforcement learning algorithm, the formalization of the problem as a Markov Decision Process plays an important part in the design of the system. Indeed, the definition of the state space involves choosing a representation of the driving scene. In this work, we focus in on how the vehicles are represented. In particular, we claim that the two most-widely used representations both suffer from different drawbacks: on the one hand, the \emph{list of features} representation is compact and accurate but has a varying-size and depends on the choice of ordering. On the other hand, the \emph{spatial grid} representation addresses these concerns but in return suffers from an accuracy-size trade-off.
 
-Our contributions are the following: first, we propose an attention-based architecture for decision-making involving social interactions, that deals with the varying-size and that accounts for two-way interactions between the ego-vehicle and every other traffic participant
-- We evaluate our model on a challenging intersection-crossing task involving up to 15 vehicles perceived simultaneously.
+Our contributions are the following: first, we propose an attention-based architecture for decision-making involving social interactions. This architecture allows to satisfy the variable-size and permutation invariance requirements even when using a \emph{list of features} representation. It also naturally accounts for interactions between the ego-vehicle and any other traffic participant.
+Second, we evaluate our model on a challenging intersection-crossing task involving up to 15 vehicles perceived simultaneously. We show that our proposed method provides significant quantitative improvements, and that it enables to capture interaction patterns in a way that is visually interpretable.
 
 \section{Background and Related Work}
 
@@ -123,13 +124,13 @@ As $Q^*$ is a fixed-point of the Bellman Operator $\cT$ -- which is a contractio
 
 \paragraph{State-representation for social interactions}{
 
-In order to apply a reinforcement learning algorithm such as DQN to an autonomous driving problem, a state space $S$ must first be chosen, that is, a representation of the scene. A vehicle driving on a road can be described in the most general way by it's continuous position, heading and velocity. The composite state (or joint-state) of a road traffic with one ego-vehicle (denoted $s_0$) and N other vehicles can then be described by the set of the states of all vehicles.
+In order to apply a reinforcement learning algorithm such as DQN to an autonomous driving problem, a state space $S$ must first be chosen, that is, a representation of the scene. When social interactions are relevant to the decision, the state should at leat compose a description of every nearby vehicle. A vehicle driving on a road can be described in the most general way by it's continuous position, heading and velocity. Then, the joint state of a road traffic with one ego-vehicle denoted $s_0$ and $N$ other vehicles can be described by the (unordered) set of individual vehicle states:
 
 \begin{equation*}
-s = \left\lbrace s_k \right\rbrace_{k \in [0, N]}\qquad
+s = \left\lbrace s_i \right\rbrace_{i \in [0, N]}\qquad
 \text{where}\qquad
-s_k = \begin{bmatrix}
-x_k & y_k & v^x_k & v^y_k & \cos\psi_k & \sin \psi_k
+s_i = \begin{bmatrix}
+x_i & y_i & v^x_i & v^y_i & \cos\psi_i & \sin \psi_i
 \end{bmatrix}^T
 \end{equation*}
 
@@ -142,7 +143,7 @@ x_k & y_k & v^x_k & v^y_k & \cos\psi_k & \sin \psi_k
 	\label{fig:representation}
 \end{figure}
 
-This representation, that we call \emph{list of features}, is illustrated in \autoref{fig:representation} and was used e.g. in \citep{Bai2015, Gindele2015, Song2016, Sunberg2017, Paxton2017, Galceran2017, Chen2017}.
+This representation, that we call \emph{list of features}, is illustrated in \autoref{fig:representation} (left) and was used for instance in \citep{Bai2015, Gindele2015, Song2016, Sunberg2017, Paxton2017, Galceran2017, Chen2017}.
 
 
 This encoding is efficient in the sense that it uses the smallest quantity of information necessary to represent the scene. However, it lacks two important properties. First, its size varies with the number of vehicles which can be problematic for the sake of function approximation which often expects constant-sized inputs, but also for concerns of varying computational complexity. Second, we expect a driving policy $\pi$ to be \emph{permutation invariant}, i.e. not to be dependent on the order in which other traffic participants are listed. Ideally, this property should be enforced and not approximated by relying on the coverage of the $N!$ possible permutations $\tau$ of any given traffic state. Formally, we require that:
@@ -150,27 +151,29 @@ This encoding is efficient in the sense that it uses the smallest quantity of in
 \pi(\cdot|(s_0, s_1,\dotsc,s_N)) = \pi(\cdot|(s_0, s_{\tau(1)},\dotsc,s_{\tau(N)})) \quad\quad\quad \forall\tau \in \mathfrak{S}_N
 \end{equation*}
 
-A popular way to address this limitations is to use a spatial matrix representation. Instead of explicitly representing spatial information as variables $x, y$ along with other features $f$ directly inside the state $\{s_k=(x_k,y_k,f_k)\}_{k\in[0,N]}$ indexed on the vehicles, they are instead represented implicitly through the layout of several feature variables $f_ij$ organized in a tensor structure, where the $i,j$ indexes refer to the cells of a quantization of the 2D-space. Note that the size of this tensor is related to the area covered divided by the length of the quantization, which reflects a trade-off between accuracy and computational load.
-In an occupancy grid, the $f$ features contains presence information (0-1) and additional channels such as velocity and heading, as in \citep{Isele2017, Fridman2018, Bansal2018, Rehder2017c}. Another example is the use of top-view RGB images \citep{Bagnell2010, Rehder2017, Rehder2017c, Liu2018}.
+A popular way to address this limitations is to use a \emph{spatial grid} representation. Instead of explicitly representing spatial information as variables $x, y$ along with other features $f$ directly inside the state $\{s_i=(x_i,y_i,f_i)\}_{i\in[0,N]}$ indexed on the vehicles, they are instead represented implicitly through the layout of several feature variables $f_{ij}$ organized in a tensor structure, where the $(i,j)$ indexes refer to the cells of a quantization of the 2D-space. This representation is illustrated in \autoref{fig:representation} (right). Note that the size of this tensor is related to the area covered divided by the length of the quantization, which reflects a trade-off between accuracy and dimensionality.
+In an occupancy grid, the $f$ features contains presence information (0-1) and additional channels such as velocity and heading, as in \citep[e.g.][]{Isele2017, Fridman2018, Bansal2018, Rehder2017c}. Another example is the use of top-view RGB images \citep[e.g.][]{Bagnell2010, Rehder2017, Rehder2017c, Liu2018}.
 
 
-This permutation invariance property can also be implemented within the policy architecture. A general technique to achieve this is to treat each entity similarly in the early stages -- e.g. through weight sharing -- before reducing them with a projection operator that is itself invariant to permutations, for instance a max-pooling as in \citep{Chen2017} or a sum as in \citep{Qi2016}. A particular instantiation of this idea is the use of attention mechanisms.
+This permutation invariance property can also be implemented within the policy architecture. A general technique to achieve this is to treat each entity similarly in the early stages -- e.g. through weight sharing -- before reducing them with a projection operator that is itself invariant to permutations, for instance a max-pooling as in \citep{Chen2017} or an average as in \citep{Qi2016}. A particular instantiation of this idea is attention mechanisms.
 
 
 \paragraph{Attention mechanisms} {The attention architecture was introduced to enable neural networks to discover inter-dependencies within a variable number of inputs.
-It has been used for pedestrian trajectory forecasting in~\cite{Vemula2018} with spatiotemporal graphs and in~\cite{Sadeghian2019CVPR} with spatial and social attention using a generative neural network. In~\cite{Sadeghian2018ECCV}, attention over top-view road scene images for car trajectory forecasting is used. Multi-head attention mechanism has been developed in~\cite{Vaswani2017} for sentence translation. In~\cite{Messaoud2019} a mechanism called non-local multi-head attention is developed. However, this is a spatial attention that does not allow vehicle-to-vehicle attention. In the present work, we use a multi-head social attention mechanism...}
+It has been used for pedestrian trajectory forecasting in~\cite{Vemula2018} with spatiotemporal graphs and in~\cite{Sadeghian2019CVPR} with spatial and social attention using a generative neural network. In~\cite{Sadeghian2018ECCV}, attention over top-view road scene images for car trajectory forecasting is used. Multi-head attention mechanism has been developed in~\cite{Vaswani2017} for sentence translation. In~\cite{Messaoud2019} a mechanism called non-local multi-head attention is developed. However, this is a spatial attention that does not allow vehicle-to-vehicle attention. In the present work, we use a multi-head social attention mechanism to capture vehicle-to-ego dependencies and build varying input size and permutation invariance into the policy model.}
 
 \section{Model Architecture}
 
-Motivation: 
-\begin{enumerate}
-	\item Out of a complex scene description, the model should be able to filter information and consider only what is relevant for decision. In other words, the agent should \emph{pay attention} to vehicles that are close or conflict with the planned route;
-	\item The model should be able to admit a variable number of vehicles as inputs;
-	\item The model should be invariant to the ordering of vehicles.
-\end{enumerate}
+Out of a complex scene description, the model should be able to filter information and consider only what is relevant for decision. In other words, the agent should \emph{pay attention} to vehicles that are close or conflict with the planned route. 
+
+The proposed architecture is presented in \autoref{fig:architecture}. It is used to represent the $Q$-function that will be optimized by the DQN algorithm. It is composed of a first linear encoding layer whose weights are shared between all vehicles. At that point, the embeddings only contain individual features of size $d_x$. They are then fed to an ego-attention layer, composed of several heads stacked together. Such an attention head is illustrated in \autoref{fig:ego-attention}, and works in the following way: in order to select a subset of vehicles depending on the context, the ego-vehicle  first emits a query $Q = [q_0]\in\Real^{1 \times d_k}$, computed with a linear projection $L_q\in\Real^{d_x \times d_k}$ of its embedding. This query is then compared to a set of keys $K = [k_0, \dots, k_N]\in\Real^{N \times d_k}$ containing descriptive features $k_i$ for each vehicle, again computed with a shared linear projection $L_k\in\Real^{d_x \times d_k}$. The similarity between the query $q_0$ and any key $k_i$ is assessed by their dot product $q_0 k_i^T$. These similarities are then scaled by the inverse-square-root-dimension $1/\sqrt{d_k}$\footnote{This scaling is due to the fact that the dot-product of two independent random vectors with mean 0,  variance 1, and dimension $d_k$, is a random variable with mean 0 and variance $d_k$} and normalized with a softmax function $\sigma$ across vehicles. We obtain a stochastic matrix called the \emph{attention matrix}, which is finally used to gather a set of output value $V = [v_0, \dots, v_N]$, where each value $v_i$ is a feature computed with a shared linear projection $L_v\in\Real^{d_x \times d_v}$. Overall, the ego-attention computation for each head can be written as:
+\begin{equation}
+\text{output}=\underbrace{\sigma\left(\frac{QK^T}{\sqrt{d_k}}\right)}_{\text{attention matrix}}V
+\label{eq:selfattention}
+\end{equation}
+The outputs from all heads are finally combined with a linear layer, and the resulting tensor is then added to the ego encoding as in residual networks. We can easily see that the result is permutation invariant: indeed, a permutation $\tau$ will change the order of the rows in keys $K$ and values $V$ in \eqref{eq:selfattention} but will keep their correspondence. The final result is a dot product of values and key-similarities, which is independent of the ordering.
 
 
-\begin{figure}[ht]
+\begin{figure}[tp]
 	\centering
 	\begin{tikzpicture}
 	\node(X1){ego};
@@ -187,8 +190,10 @@ Motivation:
 	\path (X2) edge (ENC2);
 	\path (X4) edge (ENC4);
 	
-	
-	\node[draw, rectangle, right of=ENC1, node distance=1.8cm, below=-0.2cm](TRANS1){\rotatebox{90}{ Ego-attention }};
+
+	\node[draw, rectangle, right of=ENC1, node distance=2.0cm, below=-0.4cm, fill=white](TRANS3){\rotatebox{90}{ Ego-attention }};
+	\node[draw, rectangle, right of=ENC1, node distance=1.9cm, below=-0.3cm, fill=white](TRANS2){\rotatebox{90}{ Ego-attention }};
+	\node[draw, rectangle, right of=ENC1, node distance=1.8cm, below=-0.2cm, fill=white](TRANS1){\rotatebox{90}{ Ego-attention }};
 	
 	\draw (ENC1.east) -| (TRANS1.west);
 	\draw (ENC2.east) -| (TRANS1.west);
@@ -204,18 +209,11 @@ Motivation:
 	\draw (DEC1.east) -- (Y1.west);
 	\end{tikzpicture}
 	\caption{Block diagram of our model architecture.}
-	\label{sch_whole_model}
+	\label{fig:architecture}
 	
 \end{figure}
 
-
-The multi-head self-attention layers allow vehicle interactions while keeping independence from their number
-and ordering.
-This mechanism is described in~\cite{Vaswani2017} where it is applied on sentence translation.
-In this section we explain its use for vehicle interactions.
-The computations made by each attention head is represented on figure~\ref{fig:ego-attention} and are detailed below.
-
-\begin{figure}[ht]
+\begin{figure}[tp]
 	\centering
 	\begin{tikzpicture}[scale=1, every node/.style={scale=1}]
 	\node(X1){ego encoding};
@@ -300,36 +298,6 @@ The computations made by each attention head is represented on figure~\ref{fig:e
 \end{figure}
 
 
-
-
-%Descriptive features, names keys $k_i$
-%The similarity of the query $q_i$ to the keys $k_j$ is assessed through a similarity measure implemented as a scalar product: $<q_i, k_j>$, $QK^T$.
-%These similarities are then normalized by a softmax $\sigma$ function and a division by $\sqrt{d_k}}$ where $d_k$ is the dimension of keys and queries. The final value is obtained.
-
-Self attention
-
-Each vehicle should pay attention to specific features from a selection of the other vehicles.
-This is made with three steps: ...
-Each head produces a different selection of features using a linear projection of
-the input tensor resulting in the value tensor $V$.
-To identify these features, a key tensor $K$ is associated to each value.
-Then, each vehicle (TODO: or just the ego) must select which other vehicle to pay attention to.
-For that purpose a query $Q$ is produced to find a selection of keys.
-The match score between a key and a query is the dot product is scaled with the square root of the key
-dimension $\sqrt{d_k}$ and normalized with a softmax.
-This produces an attention matrix that contains coefficients close to $1$ for matching queries and keys
-and close to $0$ otherwise.
-Finally, this matrix is used to gather the values from $V$.
-Thus, the self-attention computation for each head is written:
-\begin{equation}
-\text{output}=\underbrace{\sigma\left(\frac{QK^T}{\sqrt{d_k}}\right)}_{\text{attention matrix}}V
-\label{eq_selfattention}
-\end{equation}
-The outputs from all heads are concatenated and combined with a linear layer.
-The resulting tensor is then added to the input as in residual networks.
-
-Ego attention: only the ego-vehicle produces a query, we get one output feature. We can easily see that the result is permutation invariant: indeed, a permutation $\tau$ will change the order of the rows of keys $K$ and values $V$ but will keep their correspondence. The final result is a sum of values weighted by their key-similarities, which is independent of the ordering. %$\sigma\left(Q\tau(K)^T/\sqrt{d_k}\right)\tau(V) = \tau\left(\sigma(QK^T/\sqrt{d_k})\right)\tau(V) = \sigma\left(QK^T/\sqrt{d_k}\right)V$
-
 \section{Experiments}
 \paragraph{Environment}
 
@@ -353,11 +321,9 @@ TODO, see \autoref{tab:agents}.
 			Architecture & \MLPC & \MLPG & \EgoAtt \\
 			\midrule 
 			Input sizes & [15, 7] & [?, ?, 7] & [1-15, 7] \\
-			Layers sizes & [128, 128] &  [64, 64] & Encoder: [64, 64] \\
-			& & & Attention: $d_k=64$\\
-			& & & Decoder: [64, 64]\\
+			Layers sizes & [128, 128] &  [64, 64] & \makecell[l]{Encoder: [64, 64] \\Attention: 2 heads, $d=32$ \\ Decoder: [64, 64]} \\
 			Number of parameters & 3.0e4 & ? & 3.4e4 \\
-			Variable input size & No & No & Yes \\
+			Variable input size & No & No & Yes  \\
 			Permutation invariant & No & Yes & Yes \\
 			\bottomrule
 		\end{tabular}
