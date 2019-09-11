@@ -99,7 +99,7 @@
 
 In the last decades, the problem of \emph{behavioural planning} -- that is, high-level decision-making in the context of autonomous driving -- has arguably received less attention and seen less progress than the other components of the typical robotics pipeline: perception and control \citep{Gonzalez2016}. Indeed, the vast majority of existing systems still rely on hand-crafted rules encoded as Finite State Machines \citep{Paden2016}. As a result, only a narrow set of specified use-cases are addressed as these methods cannot scale to more complex scenes, especially when the decision-making process involves interacting with other human drivers whose behaviours are uncertain and difficult to model explicitly.
 
-This observation has led the community to turn to learning-based methods, which bear the promise of leveraging data to automatically learn a complex driving policy. In the imitation learning approach, a policy can be trained in a supervised manner to imitate human driving decisions \citep[e.g.][]{Pomerleau1989, Ross2011, Bojarski2016, Xu2016, Eraqi2017, Codevilla2017, Rehder2017c, Rezagholiradeh2018, Rhinehart2018, Bansal2018, Rhinehart2019}. Because the cost of human driving data collection at large scale can be prohibitive, another promising approach is train a policy in simulation using reinforcement learning \citep[e.g.][]{Cardamone2009, Ross2011, Mukadam2017, Chen2017, Isele_2018, Ha2018, Kendall2019}.
+This observation has led the community to turn to learning-based methods, which bear the promise of leveraging data to automatically learn a complex driving policy. In the imitation learning approach, a policy can be trained in a supervised manner to imitate human driving decisions \citep[e.g.][]{Pomerleau1989, Ross2011, Bojarski2016, Xu2016, Eraqi2017, Codevilla2017, Rehder2017c, Rezagholiradeh2018, Rhinehart2018, Bansal2018, Rhinehart2019}. Because the cost of human driving data collection at large scale can be prohibitive, another promising approach is train a policy in simulation using reinforcement learning \citep[e.g.][]{Cardamone2009, Ross2011, Mukadam2017, Chen2017, Isele2017, Isele2018, Ha2018, Kendall2019}.
 
 Beyond the choice of reinforcement learning algorithm, the formalization of the problem as a Markov Decision Process plays an important part in the design of the system. Indeed, the definition of the state space involves choosing a representation of the driving scene. In this work, we focus in on how the vehicles are represented. In particular, we claim that the two most-widely used representations both suffer from different drawbacks: on the one hand, the \emph{list of features} representation is compact and accurate but has a varying-size and depends on the choice of ordering. On the other hand, the \emph{spatial grid} representation addresses these concerns but in return suffers from an accuracy-size trade-off.
 
@@ -107,6 +107,8 @@ Our contributions are the following: first, we propose an attention-based archit
 Second, we evaluate our model on a challenging intersection-crossing task involving up to 15 vehicles perceived simultaneously. We show that our proposed method provides significant quantitative improvements, and that it enables to capture interaction patterns in a way that is visually interpretable.
 
 \section{Background and Related Work}
+
+\label{sec:background}
 
 \paragraph{Model-free deep reinforcement learning} Reinforcement Learning is a general framework for sequential decision-making under uncertainty. It frames the learning objective as the optimal control of a Markov Decision Process $(S, A, P, R, \gamma)$ with measurable state space $S$, action space $A$, unknown reward function $R\in\Real^{S \times A}$, and unknown dynamics $P\in \cM(S)^{S \times A}$, where $\cM(\mathcal{X})$ denotes the probability measures over a set $\mathcal{X}$. The objective is to find a policy $\pi\in\cM(A)^S$ with maximal expected $\gamma$-discounted cumulative reward, called the value function $V^\pi$. Formally,
 
@@ -120,19 +122,20 @@ The optimal action-value function $Q^* =  \max_\pi Q^\pi(s)$ satisfies the Bellm
 Q^*(s, a) = (\cT Q^*) (s, a) \eqdef \expectedvalueover{s'\sim P(s'|s, a)} \max_{a'\in A} \left[R(s, a) + \gamma Q^*(s', a')\right]
 \end{equation*}
 
-As $Q^*$ is a fixed-point of the Bellman Operator $\cT$ -- which is a contraction --, it can be computed by applying $\cT$ iteratively in a fixed-point iteration fashion. The \emph{Q-learning} algorithm \citep{Watkins} follows this procedure by applying a sampling version $\cT$ to a batch of collected experience. When dealing with a continuous state space $S$, we need to employ function approximation in order to generalise to nearby states. The \emph{Deep Q-Network} (DQN) algorithm \citep{Mnih} implements this idea by using a neural network model to represent the action-value function $Q$.
+As $Q^*$ is a fixed-point of the Bellman Operator $\cT$ -- which is a contraction --, it can be computed by applying $\cT$ iteratively in a fixed-point iteration fashion. The \emph{Q-learning} algorithm \citep{Watkins} follows this procedure by applying a sampling version $\cT$ to a batch of collected experience. When dealing with a continuous state space $S$, we need to employ function approximation in order to generalise to nearby states. The \emph{Deep Q-Network} (DQN) algorithm \citep{Mnih2015} implements this idea by using a neural network model to represent the action-value function $Q$.
 
 \paragraph{State-representation for social interactions}{
 
 In order to apply a reinforcement learning algorithm such as DQN to an autonomous driving problem, a state space $S$ must first be chosen, that is, a representation of the scene. When social interactions are relevant to the decision, the state should at leat compose a description of every nearby vehicle. A vehicle driving on a road can be described in the most general way by it's continuous position, heading and velocity. Then, the joint state of a road traffic with one ego-vehicle denoted $s_0$ and $N$ other vehicles can be described by the (unordered) set of individual vehicle states:
 
-\begin{equation*}
+\begin{equation}
 s = \left\lbrace s_i \right\rbrace_{i \in [0, N]}\qquad
 \text{where}\qquad
 s_i = \begin{bmatrix}
 x_i & y_i & v^x_i & v^y_i & \cos\psi_i & \sin \psi_i
 \end{bmatrix}^T
-\end{equation*}
+\label{eq:coordinates}
+\end{equation}
 
 
 \begin{figure}[tp]
@@ -146,7 +149,7 @@ x_i & y_i & v^x_i & v^y_i & \cos\psi_i & \sin \psi_i
 This representation, that we call \emph{list of features}, is illustrated in \autoref{fig:representation} (left) and was used for instance in \citep{Bai2015, Gindele2015, Song2016, Sunberg2017, Paxton2017, Galceran2017, Chen2017}.
 
 
-This encoding is efficient in the sense that it uses the smallest quantity of information necessary to represent the scene. However, it lacks two important properties. First, its size varies with the number of vehicles which can be problematic for the sake of function approximation which often expects constant-sized inputs, but also for concerns of varying computational complexity. Second, we expect a driving policy $\pi$ to be \emph{permutation invariant}, i.e. not to be dependent on the order in which other traffic participants are listed. Ideally, this property should be enforced and not approximated by relying on the coverage of the $N!$ possible permutations $\tau$ of any given traffic state. Formally, we require that:
+This encoding is efficient in the sense that it uses the smallest quantity of information necessary to represent the scene. However, it lacks two important properties. First, its size varies with the number of vehicles which can be problematic for the sake of function approximation which often expects constant-sized inputs. Second, we expect a driving policy $\pi$ to be \emph{permutation invariant}, i.e. not to be dependent on the order in which other traffic participants are listed. Ideally, this property should be enforced and not approximated by relying on the coverage of the $N!$ possible permutations $\tau$ of any given traffic state. Formally, we require that:
 \begin{equation*}
 \pi(\cdot|(s_0, s_1,\dotsc,s_N)) = \pi(\cdot|(s_0, s_{\tau(1)},\dotsc,s_{\tau(N)})) \quad\quad\quad \forall\tau \in \mathfrak{S}_N
 \end{equation*}
@@ -162,15 +165,16 @@ This permutation invariance property can also be implemented within the policy a
 It has been used for pedestrian trajectory forecasting in~\cite{Vemula2018} with spatiotemporal graphs and in~\cite{Sadeghian2019CVPR} with spatial and social attention using a generative neural network. In~\cite{Sadeghian2018ECCV}, attention over top-view road scene images for car trajectory forecasting is used. Multi-head attention mechanism has been developed in~\cite{Vaswani2017} for sentence translation. In~\cite{Messaoud2019} a mechanism called non-local multi-head attention is developed. However, this is a spatial attention that does not allow vehicle-to-vehicle attention. In the present work, we use a multi-head social attention mechanism to capture vehicle-to-ego dependencies and build varying input size and permutation invariance into the policy model.}
 
 \section{Model Architecture}
+\label{sec:architecture}
 
 Out of a complex scene description, the model should be able to filter information and consider only what is relevant for decision. In other words, the agent should \emph{pay attention} to vehicles that are close or conflict with the planned route. 
 
-The proposed architecture is presented in \autoref{fig:architecture}. It is used to represent the $Q$-function that will be optimized by the DQN algorithm. It is composed of a first linear encoding layer whose weights are shared between all vehicles. At that point, the embeddings only contain individual features of size $d_x$. They are then fed to an ego-attention layer, composed of several heads stacked together. Such an attention head is illustrated in \autoref{fig:ego-attention}, and works in the following way: in order to select a subset of vehicles depending on the context, the ego-vehicle  first emits a query $Q = [q_0]\in\Real^{1 \times d_k}$, computed with a linear projection $L_q\in\Real^{d_x \times d_k}$ of its embedding. This query is then compared to a set of keys $K = [k_0, \dots, k_N]\in\Real^{N \times d_k}$ containing descriptive features $k_i$ for each vehicle, again computed with a shared linear projection $L_k\in\Real^{d_x \times d_k}$. The similarity between the query $q_0$ and any key $k_i$ is assessed by their dot product $q_0 k_i^T$. These similarities are then scaled by the inverse-square-root-dimension $1/\sqrt{d_k}$\footnote{This scaling is due to the fact that the dot-product of two independent random vectors with mean 0,  variance 1, and dimension $d_k$, is a random variable with mean 0 and variance $d_k$} and normalized with a softmax function $\sigma$ across vehicles. We obtain a stochastic matrix called the \emph{attention matrix}, which is finally used to gather a set of output value $V = [v_0, \dots, v_N]$, where each value $v_i$ is a feature computed with a shared linear projection $L_v\in\Real^{d_x \times d_v}$. Overall, the ego-attention computation for each head can be written as:
+The proposed architecture is presented in \autoref{fig:architecture}. It is used to represent the $Q$-function that will be optimized by the DQN algorithm. It is composed of a first linear encoding layer whose weights are shared between all vehicles. At that point, the embeddings only contain individual features of size $d_x$. They are then fed to an ego-attention layer, composed of several heads stacked together. Such an attention head is illustrated in \autoref{fig:ego-attention}, and works in the following way: in order to select a subset of vehicles depending on the context, the ego-vehicle  first emits a query $Q = [q_0]\in\Real^{1 \times d_k}$, computed with a linear projection $L_q\in\Real^{d_x \times d_k}$ of its embedding. This query is then compared to a set of keys $K = [k_0, \dots, k_N]\in\Real^{N \times d_k}$ containing descriptive features $k_i$ for each vehicle, again computed with a shared linear projection $L_k\in\Real^{d_x \times d_k}$. The similarity between the query $q_0$ and any key $k_i$ is assessed by their dot product $q_0 k_i^T$. These similarities are then scaled by the inverse-square-root-dimension $1/\sqrt{d_k}$\footnote{This scaling is due to the fact that the dot-product of two independent random vectors with mean 0,  variance 1, and dimension $d_k$, is a random variable with mean 0 and variance $d_k$} and normalized with a softmax function $\sigma$ across vehicles. We obtain a stochastic matrix called the \emph{attention matrix}, which is finally used to gather a set of output value $V = [v_0, \dots, v_N]$, where each value $v_i$ is a feature computed with a shared linear projection $L_v\in\Real^{d_x \times d_v}$. Overall, the attention computation for each head can be written as:
 \begin{equation}
 \text{output}=\underbrace{\sigma\left(\frac{QK^T}{\sqrt{d_k}}\right)}_{\text{attention matrix}}V
 \label{eq:selfattention}
 \end{equation}
-The outputs from all heads are finally combined with a linear layer, and the resulting tensor is then added to the ego encoding as in residual networks. We can easily see that the result is permutation invariant: indeed, a permutation $\tau$ will change the order of the rows in keys $K$ and values $V$ in \eqref{eq:selfattention} but will keep their correspondence. The final result is a dot product of values and key-similarities, which is independent of the ordering.
+The outputs from all heads are finally combined with a linear layer, and the resulting tensor is then added to the ego encoding as in residual networks. We can easily see that this process is permutation invariant: indeed, a permutation $\tau$ will change the order of the rows in keys $K$ and values $V$ in \eqref{eq:selfattention} but will keep their correspondence. The final result is a dot product of values and key-similarities, which is independent of the ordering.
 
 
 \begin{figure}[tp]
@@ -208,7 +212,7 @@ The outputs from all heads are finally combined with a linear layer, and the res
 	
 	\draw (DEC1.east) -- (Y1.west);
 	\end{tikzpicture}
-	\caption{Block diagram of our model architecture.}
+	\caption{Block diagram of our model architecture. It is composed of several linear identical encoders, a stack of ego-attention heads, and a linear decoder.}
 	\label{fig:architecture}
 	
 \end{figure}
@@ -291,6 +295,7 @@ The outputs from all heads are finally combined with a linear layer, and the res
 	\node[right of=EQ2, node distance=2cm](OUT){output};
 	\draw (EQ2) -- (OUT);
 	
+	\draw[draw=black, dashed] (1.75cm, -5.5cm) rectangle (9.5cm,1.5cm);
 	\end{tikzpicture}
 	\caption{Architecture of an ego-attention head.
 		The blocks $L_{q}$, $L_{k}$, $L_{v}$ are linear layers. The keys $K$ and values $V$ are concatenated from all vehicles, while the query $Q$ is only produced by the ego-vehicle.}
@@ -308,8 +313,12 @@ In this context, the agent must drive a vehicle by controlling its acceleration 
 
 \paragraph{Agents}
 
-TODO, see \autoref{tab:agents}.
-
+We evaluate three different agents, whose characteristics are summarized in \autoref{tab:agents}.
+\begin{itemize}
+	\item \MLPC: a \emph{list of features} state representation is used, as described in Section \ref{sec:background}. The model is a simple multi-layer perceptron (MLP). Because this architecture requires a fixed-size input, we use zero-padding to fill the input tensor up to a maximum number $N=14$ of observed vehicles, and add an additional \emph{presence} feature to the coordinates described in \eqref{eq:coordinates} so as to identify active rows.
+	\item \MLPG: a \emph{spatial grid} representation is used, as described in Section \ref{sec:background}, with a $11 \times 11$ grid where each cell represents a $5\text{m}\times 5$m square. The model is a multi-layer perceptron.
+	\item \EgoAtt: a \emph{list of features} state representation is used along with the Ego-Attention architecture described in Section \ref{sec:architecture}. As this model supports varying-size inputs, zero-padding is not required.
+\end{itemize}
 
 \begin{table}[tp]
 	\centering
@@ -320,21 +329,23 @@ TODO, see \autoref{tab:agents}.
 			\toprule
 			Architecture & \MLPC & \MLPG & \EgoAtt \\
 			\midrule 
-			Input sizes & [15, 7] & [?, ?, 7] & [1-15, 7] \\
-			Layers sizes & [128, 128] &  [64, 64] & \makecell[l]{Encoder: [64, 64] \\Attention: 2 heads, $d=32$ \\ Decoder: [64, 64]} \\
-			Number of parameters & 3.0e4 & ? & 3.4e4 \\
-			Variable input size & No & No & Yes  \\
-			Permutation invariant & No & Yes & Yes \\
+			Input sizes & [15, 7] & [11, 11, 5] & [1-15, 7] \\
+			Layers sizes & [128, 128] &  [48, 48] & \makecell[tl]{Encoder: [64, 64] \\Attention: 2 heads, $d_k=32$ \\ Decoder: [64, 64]} \\
+			Number of parameters & 3.0e4 & 3.2e4 & 3.4e4 \\
+			Variable input size & No & No &  {Yes}  \\
+			Permutation invariant & No & {Yes} &  {Yes} \\
 			\bottomrule
 		\end{tabular}
 	\end{threeparttable}
 \end{table}
 
+These agents are all trained with the DQN algorithm using the same hyperparameters, and their architectures are scaled to admit about the same number of trainable parameters for fair comparison.
+
 \paragraph{Performances}
 
-We show in \autoref{fig:results} the evolution of the total reward, episode length and average velocity.
-The \MLPC agent learns to accelerate to earn short-term rewards, as shown by its high average velocity , but fails to exploit the information of other vehicles and crashes often, leading to shorter episodes = risky policy, worst performing.
-Conversely, the \MLPG benefits from its invariance to permutations and manages to learn to brake upon arrival at the intersection to avoid collisions (increased duration). However, it only proceeds when the intersection has been cleared (low mean velocity), resulting in an overly cautious policy, a common trait known as the freezing robot problem. Slight increase in performance.
+We plot in \autoref{fig:results} the evolution of the total reward, episode length and average velocity during training, over 4000 episodes and repeated across 120 random seeds.
+The \MLPC agent learns to accelerate to earn short-term rewards, as shown by its high average velocity, but fails to exploit the information of other vehicles and crashes often, leading to shorter episodes. In short, we obtain a risky and blind policy that is the worst performing.
+Conversely, the \MLPG architecture benefits from its invariance to permutations and manages to learn to brake upon arrival at the intersection to avoid collisions, as we can see from its higher episode length. However, it only proceeds when the intersection has been fully cleared, as reflected by its low average velocity. This results in an overly cautious policy -- a common trait colloquially known as the \emph{freezing robot problem} \citep{Trautman2010} -- but a slight increase in performance.
 In stark contrast, the \EgoAtt policy quickly learns both when it must slow down at the intersection but also when it can exploit the gaps in the traffic and take way to vehicles that are far/slow enough. The overall resulting behaviour is qualitatively more nuanced and human-like.
 
 \begin{figure}[tp]
