@@ -124,7 +124,7 @@ Q^*(s, a) = (\cT Q^*) (s, a) \eqdef \expectedvalueover{s'\sim P(s'|s, a)} \max_{
 
 As $Q^*$ is a fixed-point of the Bellman Operator $\cT$ -- which is a contraction --, it can be computed by applying $\cT$ iteratively in a fixed-point iteration fashion. The \emph{Q-learning} algorithm \citep{Watkins} follows this procedure by applying a sampling version $\cT$ to a batch of collected experience. When dealing with a continuous state space $S$, we need to employ function approximation in order to generalise to nearby states. The \emph{Deep Q-Network} (DQN) algorithm \citep{Mnih2015} implements this idea by using a neural network model to represent the action-value function $Q$.
 
-\paragraph{State-representation for social interactions}{
+\paragraph{State-representation for social interactions}
 
 In order to apply a reinforcement learning algorithm such as DQN to an autonomous driving problem, a state space $S$ must first be chosen, that is, a representation of the scene. When social interactions are relevant to the decision, the state should at leat compose a description of every nearby vehicle. A vehicle driving on a road can be described in the most general way by it's continuous position, heading and velocity. Then, the joint state of a road traffic with one ego-vehicle denoted $s_0$ and $N$ other vehicles can be described by the (unordered) set of individual vehicle states:
 
@@ -348,7 +348,7 @@ The \MLPC agent learns to accelerate to earn short-term rewards, as shown by its
 Conversely, the \MLPG architecture benefits from its invariance to permutations and manages to learn to brake upon arrival at the intersection to avoid collisions, as we can see from its higher episode length. However, it only proceeds when the intersection has been fully cleared, as reflected by its low average velocity. This results in an overly cautious policy -- a common trait colloquially known as the \emph{freezing robot problem} \citep{Trautman2010} -- but a slight increase in performance.
 In stark contrast, the \EgoAtt policy quickly learns both when it must slow down at the intersection but also when it can exploit the gaps in the traffic and take way to vehicles that are far/slow enough. The overall resulting behaviour is qualitatively more nuanced and human-like.
 
-\begin{figure}[tp]
+\begin{figure}[htp]
 	\centering
 	\begin{subfigure}[t]{.75\linewidth}
 		\centering\includegraphics[width=\linewidth]{img/total_reward}
