@@ -55,6 +55,8 @@
 	colorlinks = true,
 }
 
+\AtBeginDocument{\def\sectionautorefname{Section}}%
+
 \input{mathdef}
 
 \title{Social Attention for Autonomous Decision-Making in Dense Traffic}
@@ -96,10 +98,6 @@
 		name plot/.style={every path/.style={name path global=#1}}
 	}
 	
-	\pgfmathdeclarefunction{dnorm}{2}{%
-		\pgfmathparse{1/(#2*sqrt(2*pi))*exp(-((x-#1)^2)/(2*#2^2))}%
-	}
-	
 
 \maketitle
 
@@ -109,7 +107,7 @@
 
 \section{Introduction}
 
-In the last decades, the problem of \emph{behavioural planning} -- that is, high-level decision-making in the context of autonomous driving -- has arguably received less attention and seen less progress than the other components of the typical robotics pipeline: perception and control \citep{Gonzalez2016}. Indeed, the vast majority of existing systems still rely on hand-crafted rules encoded as Finite State Machines \citep{Paden2016}. As a result, only a narrow set of specified use-cases are addressed as these methods cannot scale to more complex scenes, especially when the decision-making process involves interacting with other human drivers whose behaviours are uncertain and difficult to model explicitly.
+In the last decades, the problem of \emph{behavioural planning} -- that is, high-level decision-making in the context of autonomous driving -- has arguably received less attention and seen less progress than the other components of the typical robotics pipeline: perception and control \citep{Gonzalez2016}. Indeed, the vast majority of existing systems still rely on hand-crafted rules encoded as Finite State Machines \citep{Paden2016}. As a result, only a narrow set of specified use-cases are addressed and these methods cannot scale to more complex scenes, especially when the decision-making involves interacting with other human drivers whose behaviours are uncertain and difficult to model explicitly.
 
 This observation has led the community to turn to learning-based methods, which bear the promise of leveraging data to automatically learn a complex driving policy. In the imitation learning approach, a policy can be trained in a supervised manner to imitate human driving decisions \citep[e.g.][]{Pomerleau1989, Ross2011, Bojarski2016, Xu2016, Eraqi2017, Codevilla2017, Rehder2017c, Rezagholiradeh2018, Rhinehart2018, Bansal2018, Rhinehart2019}. Because the cost of human driving data collection at large scale can be prohibitive, another promising approach is train a policy in simulation using reinforcement learning \citep[e.g.][]{Cardamone2009, Ross2011, Mukadam2017, Chen2017, Isele2018, Ha2018, Kendall2019}.
 
@@ -327,9 +325,9 @@ In this context, the agent must drive a vehicle by controlling its acceleration 
 
 We evaluate three different agents, whose characteristics are summarized in \autoref{tab:agents}.
 \begin{itemize}
-	\item \MLPC: a \emph{list of features} state representation is used, as described in Section \ref{sec:background}. The model is a simple multi-layer perceptron (MLP). Because this architecture requires a fixed-size input, we use zero-padding to fill the input tensor up to a maximum number $N=14$ of observed vehicles, and add an additional \emph{presence} feature to the coordinates described in \eqref{eq:coordinates} so as to identify active rows.
-	\item \MLPG: a \emph{spatial grid} representation is used, as described in Section \ref{sec:background}, with a $11 \times 11$ grid where each cell represents a $5\text{m}\times 5$m square. The model is a multi-layer perceptron.
-	\item \EgoAtt: a \emph{list of features} state representation is used along with the Ego-Attention architecture described in Section \ref{sec:architecture}. As this model supports varying-size inputs, zero-padding is not required.
+	\item \MLPC: a \emph{list of features} state representation is used, as described in \autoref{sec:background}. The model is a simple multi-layer perceptron (MLP). Because this architecture requires a fixed-size input, we use zero-padding to fill the input tensor up to a maximum number $N=14$ of observed vehicles, and add an additional \emph{presence} feature to the coordinates described in \eqref{eq:coordinates} so as to identify active rows.
+	\item \MLPG: a \emph{spatial grid} representation is used, as described in \autoref{sec:background}, with a $11 \times 11$ grid where each cell represents a $5\text{m}\times 5$m square. The model is a multi-layer perceptron.
+	\item \EgoAtt: a \emph{list of features} state representation is used along with the Ego-Attention architecture described in \autoref{sec:architecture}. As this model supports varying-size inputs, zero-padding is not required.
 \end{itemize}
 
 \begin{table}[tp]
@@ -358,7 +356,7 @@ These agents are all trained with the DQN algorithm using the same hyperparamete
 We plot in \autoref{fig:results} the evolution of the total reward, episode length and average velocity during training, over 4000 episodes and repeated across 120 random seeds.
 The \MLPC agent learns to accelerate to earn short-term rewards, as shown by its high average velocity, but fails to exploit the information of other vehicles and crashes often, leading to shorter episodes. In short, we obtain a risky and blind policy that is the worst performing.
 Conversely, the \MLPG architecture benefits from its invariance to permutations and manages to learn to brake upon arrival at the intersection to avoid collisions, as we can see from its higher episode length. However, it only proceeds when the intersection has been fully cleared, as reflected by its low average velocity. This results in an overly cautious policy -- a common trait colloquially known as the \emph{freezing robot problem} \citep{Trautman2010} -- with a slight increase in performance.
-In stark contrast, the \EgoAtt policy quickly learns both when it must slow down at the intersection (high episode length), but also when it can exploit the gaps in the traffic and take way to vehicles that are far or slow enough (higher average velocity than \MLPG). This translates as a significant performance gap, and the overall resulting behaviour is qualitatively more nuanced and human-like.
+In stark contrast, the \EgoAtt policy quickly learns both when it must slow down at the intersection (high episode length), but also when it can exploit the gaps in the traffic and take way to vehicles that are far or slow enough (higher average velocity than \MLPG). This translates as a significant performance improvement, and the overall resulting behaviour is qualitatively more nuanced and human-like.
 
 \begin{figure}[htp]
 	\centering
@@ -381,10 +379,10 @@ In stark contrast, the \EgoAtt policy quickly learns both when it must slow down
 
 \paragraph{Attention interpretation}
 
-In any given state, the attention matrix can be visualized in the following way: we connect the ego-vehicle to every each vehicle by a line with a width proportional to the corresponding attention weight. Since the architecture can contain several Ego-Attention heads, we use different colours to distinguish them. In our experiments, two attention heads were used and will be represented in green and blue. We observe in \autoref{fig:heads} that they specialized to focus on different areas: the green head is only watching the vehicles coming from the left, while the blue head restricts itself to vehicles in the front and right directions. However, we notice that both heads exhibit a common behaviour: they focus their attention on incoming vehicles that are likely to collide with the ego-vehicle, depending on their current position, heading, velocity, and ignore those that are too far or in a conflict-less situation. In particular, the attention tends to increase when vehicles get closer, as shown in \autoref{fig:distance}. It can also be very sensitive to small variations of the vehicle states, when 
+In any given state, the attention matrix can be visualized in the following way: we connect the ego-vehicle to every vehicle by a line of width proportional to the corresponding attention weight. Since the architecture can contain several Ego-Attention heads, we use different colours to distinguish them. In our experiments, two attention heads were used and will be represented in green and blue. We observe in \autoref{fig:heads} that they specialized to focus on different areas: the green head is only watching the vehicles coming from the left, while the blue head restricts itself to vehicles in the front and right directions. However, we notice that both heads exhibit a common behaviour: they focus their attention on incoming vehicles that are likely to collide with the ego-vehicle, depending on their current position, heading, velocity, and ignore those that are too far or in a conflict-less situation. In particular, the attention tends to increase when vehicles get closer, as shown in \autoref{fig:distance}. It can also be very sensitive to small variations in the traffic state, as reflected in \autoref{fig:sensitivity}. A full episode showcasing interactions with several vehicles is shown in \autoref{fig:episode}.
 
 
-\begin{figure}
+\begin{figure}[tp]
 	\centering
 	\begin{minipage}{.44\textwidth}
 		\centering
@@ -409,43 +407,38 @@ In any given state, the attention matrix can be visualized in the following way:
 	\begin{subfigure}[t]{.4\linewidth}
 		\includegraphics[width=\linewidth]{img/watch2}
 	\end{subfigure}
-	\caption{Sensitivity to uncertainty. \textbf{Right}: the agent has stopped at the intersection, its attention is focused on an incoming vehicle whose destination is still uncertain. \textbf{Left}: as soon as the vehicle orientation changes, revealing its intention of turning right, the attention drops and the agent starts accelerating right away.}
+	\caption{Sensitivity to uncertainty. \emph{Left}: the agent has stopped at the intersection, its attention is focused on an incoming vehicle whose destination is still uncertain. \emph{Right}: as soon as the vehicle orientation changes, revealing its intention of turning right, the attention drops and the agent starts accelerating right away.}
 	\label{fig:sensitivity}
 \end{figure}
 
 \begin{figure}[tp]
 	\centering
-	\begin{subfigure}[t]{.32\linewidth}
-		\includegraphics[width=\linewidth]{img/episode1}
-	\end{subfigure}
-	\begin{subfigure}[t]{.32\linewidth}
-		\includegraphics[width=\linewidth]{img/episode2}
-	\end{subfigure}
-	\begin{subfigure}[t]{.32\linewidth}
-		\includegraphics[width=\linewidth]{img/episode3}
-	\end{subfigure}
+		\includegraphics[width=.32\linewidth]{img/episode1}
+		\includegraphics[width=.32\linewidth]{img/episode2}
+		\includegraphics[width=.32\linewidth]{img/episode3}
 \\[0.12em]
-	\begin{subfigure}[t]{.32\linewidth}
-		\includegraphics[width=\linewidth]{img/episode4}
-	\end{subfigure}
-	\begin{subfigure}[t]{.32\linewidth}
-		\includegraphics[width=\linewidth]{img/episode5}
-	\end{subfigure}
-	\begin{subfigure}[t]{.32\linewidth}
-		\includegraphics[width=\linewidth]{img/episode6}
-	\end{subfigure}
-	\caption{A complete episode. From left to right: 1. The green and blue heads direct their attentions to the left and front vehicles, respectively. 2. The left-vehicle is passing and is no longer a threat 3. Immediately, the green attention head switches to the next vehicle coming from the left. 4. The front vehicle has now passed, and the blue attention head is now focused on the ego-vehicle. 5. The ego-vehicle waits for one last vehicle coming from the left. 6. The ego-vehicle can finally proceed, and its attention is focused on itself.}
+		\includegraphics[width=.32\linewidth]{img/episode4}
+		\includegraphics[width=.32\linewidth]{img/episode5}
+		\includegraphics[width=.32\linewidth]{img/episode6}
+	\caption{A complete episode. \emph{From left to right, top to bottom}: 1. The green and blue heads direct their attentions to the left and front vehicles, respectively. 2. The left-vehicle is passing and is no longer a threat 3. Immediately, the green attention head switches to the next vehicle coming from the left. 4. The front vehicle has now passed, and the blue attention head is now focused on the ego-vehicle. 5. The ego-vehicle waits for one last vehicle coming from the left. 6. The ego-vehicle can finally proceed, and its attention is focused on itself.}
+	\label{fig:episode}
 \end{figure}
 
 \paragraph{Exploiting interaction patterns}
 
-The priority rules are note enforced through rewards but interactions: based on the defined road priorities, some vehicles will take way to the ego-vehicle, while others will not.
+The priority rules are not enforced through rewards but interactions: based on the defined road priorities, some vehicles will take way to the ego-vehicle while others will not. By changing which is a priority road, we can influence the rules of interactions which affects the learnt behaviour. In \autoref{fig:priority}, we compare two policies placed in the exact same initial state and observe how their decisions are affected by their model of how incoming vehicles interact with them. This difference showcases the ability of our proposed architecture to discover and exploit such interaction patterns.
 
-change the priority -> influences the rules of interactions -> changes the learnt behaviour.
-By switching the priority road, the resulting policy changes: In the exact same initial state, the ego-vehicle takes way to incoming vehicles when its policy was trained on a priority road, and gives way otherwise. The only change between these two situations is the rules of interactions imposed on simulated vehicles, which showcases the ability of our proposed architecture to discover and exploit such interaction patterns.
-
-TODO: figure yield vs take way
-
+ \begin{figure}[htp]
+ 	\centering
+ 	\begin{subfigure}[t]{.49\linewidth}
+ 		\includegraphics[width=\linewidth]{img/priority1}
+ 	\end{subfigure}
+ 	\begin{subfigure}[t]{.49\linewidth}
+ 		\includegraphics[width=\linewidth]{img/priority2}
+ 	\end{subfigure}
+ 	\caption{Effect of the right of way. \emph{Left}: when trained on a non-priority road, the agent learns to yield to incoming vehicles. \emph{Right}: when trained on a priority road, the agent expects other vehicles to give way and is consequently more aggressive.}
+ 	\label{fig:priority}
+ \end{figure}
 
 \paragraph{Goal conditioning}
 
