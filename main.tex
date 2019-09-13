@@ -43,6 +43,18 @@
 \usepackage{cases}
 \usepackage{multirow}
 
+\definecolor{mylinkcolor}{HTML}{e83f6f}
+\definecolor{mycitecolor}{HTML}{2980B9}
+\definecolor{myurlcolor}{HTML}{d63230}
+% \definecolor{myalgocolor}{HTML}{32936f}
+\definecolor{myalgocolor}{HTML}{000000}
+\hypersetup{
+	linkcolor  = mylinkcolor,
+	citecolor  = mycitecolor,
+	urlcolor   = myurlcolor,
+	colorlinks = true,
+}
+
 \input{mathdef}
 
 \title{Social Attention for Autonomous Decision-Making in Dense Traffic}
@@ -126,7 +138,7 @@ As $Q^*$ is a fixed-point of the Bellman Operator $\cT$ -- which is a contractio
 
 \paragraph{State-representation for social interactions}
 
-In order to apply a reinforcement learning algorithm such as DQN to an autonomous driving problem, a state space $S$ must first be chosen, that is, a representation of the scene. When social interactions are relevant to the decision, the state should at leat compose a description of every nearby vehicle. A vehicle driving on a road can be described in the most general way by it's continuous position, heading and velocity. Then, the joint state of a road traffic with one ego-vehicle denoted $s_0$ and $N$ other vehicles can be described by the (unordered) set of individual vehicle states:
+In order to apply a reinforcement learning algorithm such as DQN to an autonomous driving problem, a state space $S$ must first be chosen, that is, a representation of the scene. When social interactions are relevant to the decision, the state should at least compose a description of every nearby vehicle. A vehicle driving on a road can be described in the most general way by it's continuous position, heading and velocity. Then, the joint state of a road traffic with one ego-vehicle denoted $s_0$ and $N$ other vehicles can be described by the (unordered) set of individual vehicle states:
 
 \begin{equation}
 s = \left\lbrace s_i \right\rbrace_{i \in [0, N]}\qquad
@@ -169,7 +181,7 @@ It has been used for pedestrian trajectory forecasting in~\cite{Vemula2018} with
 
 Out of a complex scene description, the model should be able to filter information and consider only what is relevant for decision. In other words, the agent should \emph{pay attention} to vehicles that are close or conflict with the planned route. 
 
-The proposed architecture is presented in \autoref{fig:architecture}. It is used to represent the $Q$-function that will be optimized by the DQN algorithm. It is composed of a first linear encoding layer whose weights are shared between all vehicles. At that point, the embeddings only contain individual features of size $d_x$. They are then fed to an ego-attention layer, composed of several heads stacked together. Such an attention head is illustrated in \autoref{fig:ego-attention}, and works in the following way: in order to select a subset of vehicles depending on the context, the ego-vehicle  first emits a single query $Q = [q_0]\in\Real^{1 \times d_k}$, computed with a linear projection $L_q\in\Real^{d_x \times d_k}$ of its embedding. This query is then compared to a set of keys $K = [k_0, \dots, k_N]\in\Real^{N \times d_k}$ containing descriptive features $k_i$ for each vehicle, again computed with a shared linear projection $L_k\in\Real^{d_x \times d_k}$. The similarity between the query $q_0$ and any key $k_i$ is assessed by their dot product $q_0 k_i^T$. These similarities are then scaled by the inverse-square-root-dimension $1/\sqrt{d_k}$\footnote{This scaling is due to the fact that the dot-product of two independent random vectors with mean 0,  variance 1, and dimension $d_k$, is a random variable with mean 0 and variance $d_k$} and normalized with a softmax function $\sigma$ across vehicles. We obtain a stochastic matrix called the \emph{attention matrix}, which is finally used to gather a set of output value $V = [v_0, \dots, v_N]$, where each value $v_i$ is a feature computed with a shared linear projection $L_v\in\Real^{d_x \times d_v}$. Overall, the attention computation for each head can be written as:
+The proposed architecture is presented in \autoref{fig:architecture}. It is used to represent the $Q$-function that will be optimized by the DQN algorithm. It is composed of a first linear encoding layer whose weights are shared between all vehicles. At that point, the embeddings only contain individual features of size $d_x$. They are then fed to an ego-attention layer, composed of several heads stacked together. The \emph{ego} prefix highlights that it similar to a multi-head self-attention layer \citep{Vaswani2017} but with only a single output corresponding to the ego-vehicle. Such an ego-attention head is illustrated in \autoref{fig:ego-attention} and works in the following way: in order to select a subset of vehicles depending on the context, the ego-vehicle  first emits a single query $Q = [q_0]\in\Real^{1 \times d_k}$, computed with a linear projection $L_q\in\Real^{d_x \times d_k}$ of its embedding. This query is then compared to a set of keys $K = [k_0, \dots, k_N]\in\Real^{N \times d_k}$ containing descriptive features $k_i$ for each vehicle, again computed with a shared linear projection $L_k\in\Real^{d_x \times d_k}$. The similarity between the query $q_0$ and any key $k_i$ is assessed by their dot product $q_0 k_i^T$. These similarities are then scaled by the inverse-square-root-dimension $1/\sqrt{d_k}$\footnote{This scaling is due to the fact that the dot-product of two independent random vectors with mean 0,  variance 1, and dimension $d_k$, is a random variable with mean 0 and variance $d_k$} and normalized with a softmax function $\sigma$ across vehicles. We obtain a stochastic matrix called the \emph{attention matrix}, which is finally used to gather a set of output value $V = [v_0, \dots, v_N]$, where each value $v_i$ is a feature computed with a shared linear projection $L_v\in\Real^{d_x \times d_v}$. Overall, the attention computation for each head can be written as:
 \begin{equation}
 \text{output}=\underbrace{\sigma\left(\frac{QK^T}{\sqrt{d_k}}\right)}_{\text{attention matrix}}V
 \label{eq:selfattention}
@@ -345,8 +357,8 @@ These agents are all trained with the DQN algorithm using the same hyperparamete
 
 We plot in \autoref{fig:results} the evolution of the total reward, episode length and average velocity during training, over 4000 episodes and repeated across 120 random seeds.
 The \MLPC agent learns to accelerate to earn short-term rewards, as shown by its high average velocity, but fails to exploit the information of other vehicles and crashes often, leading to shorter episodes. In short, we obtain a risky and blind policy that is the worst performing.
-Conversely, the \MLPG architecture benefits from its invariance to permutations and manages to learn to brake upon arrival at the intersection to avoid collisions, as we can see from its higher episode length. However, it only proceeds when the intersection has been fully cleared, as reflected by its low average velocity. This results in an overly cautious policy -- a common trait colloquially known as the \emph{freezing robot problem} \citep{Trautman2010} -- but a slight increase in performance.
-In stark contrast, the \EgoAtt policy quickly learns both when it must slow down at the intersection but also when it can exploit the gaps in the traffic and take way to vehicles that are far/slow enough. The overall resulting behaviour is qualitatively more nuanced and human-like.
+Conversely, the \MLPG architecture benefits from its invariance to permutations and manages to learn to brake upon arrival at the intersection to avoid collisions, as we can see from its higher episode length. However, it only proceeds when the intersection has been fully cleared, as reflected by its low average velocity. This results in an overly cautious policy -- a common trait colloquially known as the \emph{freezing robot problem} \citep{Trautman2010} -- with a slight increase in performance.
+In stark contrast, the \EgoAtt policy quickly learns both when it must slow down at the intersection (high episode length), but also when it can exploit the gaps in the traffic and take way to vehicles that are far or slow enough (higher average velocity than \MLPG). This translates as a significant performance gap, and the overall resulting behaviour is qualitatively more nuanced and human-like.
 
 \begin{figure}[htp]
 	\centering
@@ -369,22 +381,22 @@ In stark contrast, the \EgoAtt policy quickly learns both when it must slow down
 
 \paragraph{Attention interpretation}
 
-In any given state, the attention matrix can be visualized in the following way: we connect the ego-vehicle to every each vehicle by a line with a width proportional to the corresponding attention weight. Since the architecture can contain several Ego-Attention heads, we use different colours to distinguish them. In our experiments, we used two attention heads represented in green and blue. We observe that both heads exhibit a common behaviour: they focus their attention on incoming vehicles that are likely to collide with the ego-vehicle, depending on their current position, heading, velocity, and ignore those that are too far or in a conflict-less situation. However, we can also notice that the two heads have specialized to focus on different areas: the green head is only watching the vehicles coming from the left, while the blue head restricts itself to vehicles in the front and right directions.
+In any given state, the attention matrix can be visualized in the following way: we connect the ego-vehicle to every each vehicle by a line with a width proportional to the corresponding attention weight. Since the architecture can contain several Ego-Attention heads, we use different colours to distinguish them. In our experiments, two attention heads were used and will be represented in green and blue. We observe in \autoref{fig:heads} that they specialized to focus on different areas: the green head is only watching the vehicles coming from the left, while the blue head restricts itself to vehicles in the front and right directions. However, we notice that both heads exhibit a common behaviour: they focus their attention on incoming vehicles that are likely to collide with the ego-vehicle, depending on their current position, heading, velocity, and ignore those that are too far or in a conflict-less situation. In particular, the attention tends to increase when vehicles get closer, as shown in \autoref{fig:distance}. It can also be very sensitive to small variations of the vehicle states, when 
 
 
 \begin{figure}
 	\centering
-	\begin{minipage}{.45\textwidth}
+	\begin{minipage}{.44\textwidth}
 		\centering
 		\includegraphics[width=\linewidth]{img/head_specialization}
-		\captionof{figure}{Specialization of the attention heads}
+		\captionof{figure}{The attention heads specialized in different areas: left and front/right.}
 		\label{fig:heads}
 	\end{minipage}
 \hfill
-	\begin{minipage}{.5\textwidth}
+	\begin{minipage}{.545\textwidth}
 		\centering
 		\includegraphics[width=\linewidth]{img/distances}
-		\captionof{figure}{Generally, the attention increases as the vehicles get closer.}
+		\captionof{figure}{The attention paid to a vehicle tends to increase as it gets closer.}
 		\label{fig:distance}
 	\end{minipage}
 \end{figure}
@@ -397,7 +409,7 @@ In any given state, the attention matrix can be visualized in the following way:
 	\begin{subfigure}[t]{.4\linewidth}
 		\includegraphics[width=\linewidth]{img/watch2}
 	\end{subfigure}
-	\caption{Sensitivity to uncertainty. \textbf{Right}: the agent has stopped at the intersection, its attention is focused on an incoming vehicle whose destination is still uncertain. \textbf{Left}: as soon as the incoming vehicle changes orientation, revealing a right turn, the attention drops and the agent starts accelerating.}
+	\caption{Sensitivity to uncertainty. \textbf{Right}: the agent has stopped at the intersection, its attention is focused on an incoming vehicle whose destination is still uncertain. \textbf{Left}: as soon as the vehicle orientation changes, revealing its intention of turning right, the attention drops and the agent starts accelerating right away.}
 	\label{fig:sensitivity}
 \end{figure}
 
@@ -435,14 +447,13 @@ By switching the priority road, the resulting policy changes: In the exact same 
 TODO: figure yield vs take way
 
 
-\section{Discussion}
+\paragraph{Goal conditioning}
 
-We trained a policy for left-turns, which is the hardest one as it had both the most conflict points and the lowest priority level. We also trained individual policies for right turns and straight crossings, and obtained similar results. When training a joint intersection policy, it is less efficient as it has no prior information on where the ego-vehicle is going. 
-A generic intersection could be trained, but additional information must be added as additional features in \eqref{eq:coordinates}. For instance, the destination can be encoded as a desired direction $d_x, d_y$. This destination feature could also be used for other vehicles to encode blinker information when available. This should result in a more efficient policy.
+In the previous examples, we trained a policy tailored for left-turns only because it is the hardest direction with the most conflict points and the lowest priority level. Two individual policies tailored for right turns and driving straight can be trained as well, with similar results. Training a generic intersection policy would be less efficient without any prior information on where the ego-vehicle is headed. To remedy this problem, the destination could be added as additional features in \eqref{eq:coordinates}, for instance encoded as a desired direction $(d_x, d_y)$. This destination feature could also be used for other traffic participants to encode blinker information when available. This should result in a more efficient and generic policy.
 
 \section{Conclusion}
 
-In this work, we showed that the \emph{list of features} representation, commonly used to describe vehicles in autonomous driving literature, is not tailored for use in a function approximation setting, in particular with neural networks. These concerns can be addressed by the \emph{spatial grid} representation, but the latter comes at the price of an increased input size and loss of accuracy. In contrast, we proposed an attention-based neural network architecture to tackle the aforementioned issues without compromising either size or accuracy. This architecture enjoys a better performance on a simulated negotiation and intersection crossing task. 
+In this work, we showed that the \emph{list of features} representation, commonly used to describe vehicles in autonomous driving literature, is not tailored for use in a function approximation setting, in particular with neural networks. These concerns can be addressed by the \emph{spatial grid} representation, but it comes at the price of an increased input size and loss of accuracy. In contrast, we proposed an attention-based neural network architecture to tackle the aforementioned issues of the \emph{list of features} representation without compromising either size or accuracy. This architecture enjoys a better performance on a simulated negotiation and intersection crossing task, and is also more interpretable thanks to the visualisation of the attention matrix. The resulting policy successfully learns to recognize and exploit the interaction patterns that govern the nearby traffic.
 
 %\subsubsection*{Acknowledgments}
 %
