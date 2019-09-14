@@ -127,12 +127,12 @@ V^\pi(s) &\eqdef \expectedvalue\left[\sum_{t=0}^\infty \gamma^t R(s_t, a_t)\cond
 Q^\pi(s, a) &\eqdef R(s, a) + \gamma \expectedvalueover{s'\sim P(s'|s, a)} V^\pi(s')
 \end{align*}
 
-The optimal action-value function $Q^* =  \max_\pi Q^\pi(s)$ satisfies the Bellman Optimality Equation \citep{bellman}:
+The optimal action-value function $Q^* =  \max_\pi Q^\pi(s)$ satisfies the Bellman Optimality Equation:
 \begin{equation*}
 Q^*(s, a) = (\cT Q^*) (s, a) \eqdef \expectedvalueover{s'\sim P(s'|s, a)} \max_{a'\in A} \left[R(s, a) + \gamma Q^*(s', a')\right]
 \end{equation*}
 
-As $Q^*$ is a fixed-point of the Bellman Operator $\cT$ -- which is a contraction --, it can be computed by applying $\cT$ iteratively in a fixed-point iteration fashion. The \emph{Q-learning} algorithm \citep{Watkins} follows this procedure by applying a sampling version $\cT$ to a batch of collected experience. When dealing with a continuous state space $S$, we need to employ function approximation in order to generalise to nearby states. The \emph{Deep Q-Network} (DQN) algorithm \citep{Mnih2015} implements this idea by using a neural network model to represent the action-value function $Q$.
+As $Q^*$ is a fixed-point of the Bellman Operator $\cT$ \citep{Bellman56} -- which is a contraction --, it can be computed by applying $\cT$ in a fixed-point iteration fashion. The \emph{Q-learning} algorithm \citep{Watkins1992} follows this procedure by applying a sampling version $\cT$ to a batch of collected experience. When dealing with a continuous state space $S$, we need to employ function approximation in order to generalise to nearby states. The \emph{Deep Q-Network} (DQN) algorithm \citep{Mnih2015} implements this idea by using a neural network model to represent the action-value function $Q$.
 
 \paragraph{State-representation for social interactions}
 
@@ -164,8 +164,8 @@ This encoding is efficient in the sense that it uses the smallest quantity of in
 \pi(\cdot|(s_0, s_1,\dotsc,s_N)) = \pi(\cdot|(s_0, s_{\tau(1)},\dotsc,s_{\tau(N)})) \quad\quad\quad \forall\tau \in \mathfrak{S}_N
 \end{equation*}
 
-A popular way to address this limitations is to use a \emph{spatial grid} representation. Instead of explicitly representing spatial information as variables $x, y$ along with other features $f$ directly inside the state $\{s_i=(x_i,y_i,f_i)\}_{i\in[0,N]}$ indexed on the vehicles, they are instead represented implicitly through the layout of several feature variables $f_{ij}$ organized in a tensor structure, where the $(i,j)$ indexes refer to the cells of a quantization of the 2D-space. This representation is illustrated in \autoref{fig:representation} (right). Note that the size of this tensor is related to the area covered divided by the length of the quantization, which reflects a trade-off between accuracy and dimensionality.
-In an occupancy grid, the $f$ features contains presence information (0-1) and additional channels such as velocity and heading, as in \citep[e.g.][]{Isele2017, Fridman2018, Bansal2018, Rehder2017c}. Another example is the use of top-view RGB images \citep[e.g.][]{Bagnell2010, Rehder2017, Rehder2017c, Liu2018}.
+A popular way to address this limitations is to use a \emph{spatial grid} representation. Instead of explicitly representing spatial information as variables $x, y$ along with other features $f$ directly inside a state $\{s_i=(x_i,y_i,f_i)\}_{i\in[0,N]}$ indexed on the vehicles, they are instead represented implicitly through the layout of several feature variables $f_{ij}$ organized in a tensor structure, where the $(i,j)$ indexes refer to a quantization of the 2D-space. This representation is illustrated in \autoref{fig:representation} (right). Note that the size of this tensor is related to the area covered divided by the quantization step, which reflects a trade-off between accuracy and dimensionality.
+In an occupancy grid, the $f$ features contains presence information (0-1) and additional channels such as velocity and heading, as in \citep[e.g.][]{Isele2018, Fridman2018, Bansal2018, Rehder2017c}. Another example is the use of top-view RGB images \citep[e.g.][]{Bagnell2010, Rehder2017, Rehder2017c, Liu2018}.
 
 
 This permutation invariance property can also be implemented within the policy architecture. A general technique to achieve this is to treat each entity similarly in the early stages -- e.g. through weight sharing -- before reducing them with a projection operator that is itself invariant to permutations, for instance a max-pooling as in \citep{Chen2017} or an average as in \citep{Qi2016}. A particular instantiation of this idea is attention mechanisms.
@@ -317,7 +317,7 @@ The outputs from all heads are finally combined with a linear layer, and the res
 \paragraph{Environment}
 
 In this application, we use the \href{https://github.com/eleurent/highway-env}{highway-env} environment \citep{highway-env} for simulated highway driving and behavioural decision-making. We propose a new task where vehicle-to-vehicle interaction plays a significant part: crossing a four-way intersection.
-The scene -- composed of two roads crossing perpendicularly -- is populated with several traffic participants initialized with random positions, velocities, and destinations. As in \citep{highway-env}, these vehicle are simulated with the Kinematic Bicycle Model, their lateral control is achieved by a low-level steering controller tracking a target route, and their longitudinal behaviour follows the Intelligent Driver Model. However, this model only considers same-lane interactions and special care was required to prevent lateral collisions at the intersection. To that end, we implemented the following simplistic behaviour: each vehicle predicts the future positions of its neighbours over a three-second horizon by using a constant velocity model. In case of predicted collision with a neighbour, the yielding vehicle is determined based on road priorities, and must brake until the collision prediction ceases. 
+The scene -- composed of two roads crossing perpendicularly -- is populated with several traffic participants initialized with random positions, velocities, and destinations. As in \citep{highway-env}, these vehicle are simulated with the Kinematic Bicycle Model, their lateral control is achieved by a low-level steering controller tracking a target route, and their longitudinal behaviour follows the Intelligent Driver Model \citep{Treiber2000}. However, this model only considers same-lane interactions and special care was required to prevent lateral collisions at the intersection. To that end, we implemented the following simplistic behaviour: each vehicle predicts the future positions of its neighbours over a three-seconds horizon by using a constant velocity model. In case of predicted collision with a neighbour, the yielding vehicle is determined based on road priorities and brakes until the collision prediction ceases. 
 
 In this context, the agent must drive a vehicle by controlling its acceleration chosen from a finite set of actions $A = \{\texttt{SLOWER}, \texttt{NO-OP}, \texttt{FASTER}\}$. The lateral control is performed automatically by a low-level controller, such that the problem complexity is focused on the high-level interactions with other vehicles, namely the decision to either yield or take way. The agent is rewarded by $1$ when it drives at maximum velocity, $0$ otherwise, and by $-5$ when a collision occurs.
 
@@ -325,7 +325,7 @@ In this context, the agent must drive a vehicle by controlling its acceleration 
 
 We evaluate three different agents, whose characteristics are summarized in \autoref{tab:agents}.
 \begin{itemize}
-	\item \MLPC: a \emph{list of features} state representation is used, as described in \autoref{sec:background}. The model is a simple multi-layer perceptron (MLP). Because this architecture requires a fixed-size input, we use zero-padding to fill the input tensor up to a maximum number $N=14$ of observed vehicles, and add an additional \emph{presence} feature to the coordinates described in \eqref{eq:coordinates} so as to identify active rows.
+	\item \MLPL: a \emph{list of features} state representation is used, as described in \autoref{sec:background}. The model is a simple multi-layer perceptron (MLP). Because this architecture requires a fixed-size input, we use zero-padding to fill the input tensor up to a maximum number $N=14$ of observed vehicles, and add an additional \emph{presence} feature to the coordinates described in \eqref{eq:coordinates} so as to identify active rows.
 	\item \MLPG: a \emph{spatial grid} representation is used, as described in \autoref{sec:background}, with a $11 \times 11$ grid where each cell represents a $5\text{m}\times 5$m square. The model is a multi-layer perceptron.
 	\item \EgoAtt: a \emph{list of features} state representation is used along with the Ego-Attention architecture described in \autoref{sec:architecture}. As this model supports varying-size inputs, zero-padding is not required.
 \end{itemize}
@@ -337,7 +337,7 @@ We evaluate three different agents, whose characteristics are summarized in \aut
 		\label{tab:agents}
 		\begin{tabular}{lccc}
 			\toprule
-			Architecture & \MLPC & \MLPG & \EgoAtt \\
+			Architecture & \MLPL & \MLPG & \EgoAtt \\
 			\midrule 
 			Input sizes & [15, 7] & [11, 11, 5] & [1-15, 7] \\
 			Layers sizes & [128, 128] &  [48, 48] & \makecell[tl]{Encoder: [64, 64] \\Attention: 2 heads, $d_k=32$ \\ Decoder: [64, 64]} \\
@@ -354,7 +354,7 @@ These agents are all trained with the DQN algorithm using the same hyperparamete
 \paragraph{Performances}
 
 We plot in \autoref{fig:results} the evolution of the total reward, episode length and average velocity during training, over 4000 episodes and repeated across 120 random seeds.
-The \MLPC agent learns to accelerate to earn short-term rewards, as shown by its high average velocity, but fails to exploit the information of other vehicles and crashes often, leading to shorter episodes. In short, we obtain a risky and blind policy that is the worst performing.
+The \MLPL agent learns to accelerate to earn short-term rewards, as shown by its high average velocity, but fails to exploit the information of other vehicles and crashes often, leading to shorter episodes. In short, we obtain a risky and blind policy that is the worst performing.
 Conversely, the \MLPG architecture benefits from its invariance to permutations and manages to learn to brake upon arrival at the intersection to avoid collisions, as we can see from its higher episode length. However, it only proceeds when the intersection has been fully cleared, as reflected by its low average velocity. This results in an overly cautious policy -- a common trait colloquially known as the \emph{freezing robot problem} \citep{Trautman2010} -- with a slight increase in performance.
 In stark contrast, the \EgoAtt policy quickly learns both when it must slow down at the intersection (high episode length), but also when it can exploit the gaps in the traffic and take way to vehicles that are far or slow enough (higher average velocity than \MLPG). This translates as a significant performance improvement, and the overall resulting behaviour is qualitatively more nuanced and human-like.
 
