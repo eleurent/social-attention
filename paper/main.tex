@@ -136,10 +136,10 @@ As $Q^*$ is a fixed-point of the Bellman Operator $\cT$ \citep{Bellman56} -- whi
 
 \paragraph{State-representation for social interactions}
 
-In order to apply a reinforcement learning algorithm such as DQN to an autonomous driving problem, a state space $S$ must first be chosen, that is, a representation of the scene. When social interactions are relevant to the decision, the state should at least compose a description of every nearby vehicle. A vehicle driving on a road can be described in the most general way by it's continuous position, heading and velocity. Then, the joint state of a road traffic with one ego-vehicle denoted $s_0$ and $N$ other vehicles can be described by the (unordered) set of individual vehicle states:
+In order to apply a reinforcement learning algorithm such as DQN to an autonomous driving problem, a state space $S$ must first be chosen, that is, a representation of the scene. When social interactions are relevant to the decision, the state should at least contain a description of every nearby vehicle. A vehicle driving on a road can be described in the most general way by it's continuous position, heading and velocity. Then, the joint state of a road traffic with one ego-vehicle denoted $s_0$ and $N$ other vehicles can be described by a list of individual vehicle states:
 
 \begin{equation}
-s = \left\lbrace s_i \right\rbrace_{i \in [0, N]}\qquad
+s = \left( s_i \right)_{i \in [0, N]}\qquad
 \text{where}\qquad
 s_i = \begin{bmatrix}
 x_i & y_i & v^x_i & v^y_i & \cos\psi_i & \sin \psi_i
@@ -160,15 +160,16 @@ This representation, that we call \emph{list of features}, is illustrated in \au
 
 
 This encoding is efficient in the sense that it uses the smallest quantity of information necessary to represent the scene. However, it lacks two important properties. First, its size varies with the number of vehicles which can be problematic for the sake of function approximation which often expects constant-sized inputs. Second, we expect a driving policy $\pi$ to be \emph{permutation invariant}, i.e. not to be dependent on the order in which other traffic participants are listed. Ideally, this property should be enforced and not approximated by relying on the coverage of the $N!$ possible permutations $\tau$ of any given traffic state. Formally, we require that:
-\begin{equation*}
+\begin{equation}
+\label{eq:permutation}
 \pi(\cdot|(s_0, s_1,\dotsc,s_N)) = \pi(\cdot|(s_0, s_{\tau(1)},\dotsc,s_{\tau(N)})) \quad\quad\quad \forall\tau \in \mathfrak{S}_N
-\end{equation*}
+\end{equation}
 
 A popular way to address this limitations is to use a \emph{spatial grid} representation. Instead of explicitly representing spatial information as variables $x, y$ along with other features $f$ directly inside a state $\{s_i=(x_i,y_i,f_i)\}_{i\in[0,N]}$ indexed on the vehicles, they are instead represented implicitly through the layout of several feature variables $f_{ij}$ organized in a tensor structure, where the $(i,j)$ indexes refer to a quantization of the 2D-space. This representation is illustrated in \autoref{fig:representation} (right). Note that the size of this tensor is related to the area covered divided by the quantization step, which reflects a trade-off between accuracy and dimensionality.
 In an occupancy grid, the $f$ features contains presence information (0-1) and additional channels such as velocity and heading, as in \citep[e.g.][]{Isele2018, Fridman2018, Bansal2018, Rehder2017c}. Another example is the use of top-view RGB images \citep[e.g.][]{Bagnell2010, Rehder2017, Rehder2017c, Liu2018}.
 
 
-This permutation invariance property can also be implemented within the policy architecture. A general technique to achieve this is to treat each entity similarly in the early stages -- e.g. through weight sharing -- before reducing them with a projection operator that is itself invariant to permutations, for instance a max-pooling as in \citep{Chen2017} or an average as in \citep{Qi2016}. A particular instantiation of this idea is attention mechanisms.
+This permutation invariance property \eqref{eq:permutation} can also be implemented within the architecture of the policy $\pi$. A general technique to achieve this is to treat each entity similarly in the early stages -- e.g. through weight sharing -- before reducing them with a projection operator that is itself invariant to permutations, for instance a max-pooling as in \citep{Chen2017} or an average as in \citep{Qi2016}. A particular instance of this idea is attention mechanisms.
 
 
 \paragraph{Attention mechanisms} {The attention architecture was introduced to enable neural networks to discover inter-dependencies within a variable number of inputs.
@@ -319,7 +320,7 @@ The outputs from all heads are finally combined with a linear layer, and the res
 In this application, we use the \href{https://github.com/eleurent/highway-env}{highway-env} environment \citep{highway-env} for simulated highway driving and behavioural decision-making. We propose a new task where vehicle-to-vehicle interaction plays a significant part: crossing a four-way intersection.
 The scene -- composed of two roads crossing perpendicularly -- is populated with several traffic participants initialized with random positions, velocities, and destinations. As in \citep{highway-env}, these vehicle are simulated with the Kinematic Bicycle Model, their lateral control is achieved by a low-level steering controller tracking a target route, and their longitudinal behaviour follows the Intelligent Driver Model \citep{Treiber2000}. However, this model only considers same-lane interactions and special care was required to prevent lateral collisions at the intersection. To that end, we implemented the following simplistic behaviour: each vehicle predicts the future positions of its neighbours over a three-seconds horizon by using a constant velocity model. In case of predicted collision with a neighbour, the yielding vehicle is determined based on road priorities and brakes until the collision prediction ceases. 
 
-In this context, the agent must drive a vehicle by controlling its acceleration chosen from a finite set of actions $A = \{\texttt{SLOWER}, \texttt{NO-OP}, \texttt{FASTER}\}$. The lateral control is performed automatically by a low-level controller, such that the problem complexity is focused on the high-level interactions with other vehicles, namely the decision to either yield or take way. The agent is rewarded by $1$ when it drives at maximum velocity, $0$ otherwise, and by $-5$ when a collision occurs.
+In this context, the agent must drive a vehicle by controlling its acceleration chosen from a finite set of actions $A = \{\texttt{SLOWER}, \texttt{NO-OP}, \texttt{FASTER}\}$. The lateral control is performed automatically by a low-level controller, such that the problem complexity is focused on the high-level interactions with other vehicles, namely the decision to either give or take way. The agent is rewarded by $1$ when it drives at maximum velocity, $0$ otherwise, and by $-5$ when a collision occurs.
 
 \paragraph{Agents}
 
@@ -354,9 +355,9 @@ These agents are all trained with the DQN algorithm using the same hyperparamete
 \paragraph{Performances}
 
 We plot in \autoref{fig:results} the evolution of the total reward, episode length and average velocity during training, over 4000 episodes and repeated across 120 random seeds.
-The \MLPL agent learns to accelerate to earn short-term rewards, as shown by its high average velocity, but fails to exploit the information of other vehicles and crashes often, leading to shorter episodes. In short, we obtain a risky and blind policy that is the worst performing.
+The \MLPL agent learns to accelerate to earn short-term rewards, as shown by its high average velocity, but fails to exploit the information of other vehicles and crashes often, leading to short episodes. We obtain a risky and blind policy that is the worst performing.
 Conversely, the \MLPG architecture benefits from its invariance to permutations and manages to learn to brake upon arrival at the intersection to avoid collisions, as we can see from its higher episode length. However, it only proceeds when the intersection has been fully cleared, as reflected by its low average velocity. This results in an overly cautious policy -- a common trait colloquially known as the \emph{freezing robot problem} \citep{Trautman2010} -- with a slight increase in performance.
-In stark contrast, the \EgoAtt policy quickly learns both when it must slow down at the intersection (high episode length), but also when it can exploit the gaps in the traffic and take way to vehicles that are far or slow enough (higher average velocity than \MLPG). This translates as a significant performance improvement, and the overall resulting behaviour is qualitatively more nuanced and human-like.
+In stark contrast, the \EgoAtt policy quickly learns both when it must slow down at the intersection (see the high episode length), but also when it can exploit the gaps in the traffic and take way to vehicles that are far or slow enough (see the higher average velocity than \MLPG). This translates as a significant performance improvement, and the overall resulting behaviour is qualitatively more nuanced and human-like.
 
 \begin{figure}[htp]
 	\centering
@@ -379,7 +380,7 @@ In stark contrast, the \EgoAtt policy quickly learns both when it must slow down
 
 \paragraph{Attention interpretation}
 
-In any given state, the attention matrix can be visualized in the following way: we connect the ego-vehicle to every vehicle by a line of width proportional to the corresponding attention weight. Since the architecture can contain several Ego-Attention heads, we use different colours to distinguish them. In our experiments, two attention heads were used and will be represented in green and blue. We observe in \autoref{fig:heads} that they specialized to focus on different areas: the green head is only watching the vehicles coming from the left, while the blue head restricts itself to vehicles in the front and right directions. However, we notice that both heads exhibit a common behaviour: they focus their attention on incoming vehicles that are likely to collide with the ego-vehicle, depending on their current position, heading, velocity, and ignore those that are too far or in a conflict-less situation. In particular, the attention tends to increase when vehicles get closer, as shown in \autoref{fig:distance}. It can also be very sensitive to small variations in the traffic state, as reflected in \autoref{fig:sensitivity}. A full episode showcasing interactions with several vehicles is shown in \autoref{fig:episode}.
+In any given state, the attention matrix can be visualized in the following way: we connect the ego-vehicle to every vehicle by a line of width proportional to the corresponding attention weight. Since the architecture can contain several ego-attention heads, we use different colours to distinguish them. In our experiments, two attention heads were used and will be represented in green and blue. We observe in \autoref{fig:heads} that they specialized to focus on different areas: the green head is only watching the vehicles coming from the left, while the blue head restricts itself to vehicles in the front and right directions. However, we notice that both heads exhibit a common behaviour: they direct their attention to incoming vehicles that are likely to collide with the ego-vehicle, depending on their current position, heading, velocity, and ignore those that are too far or in a conflict-less situation. In particular, the attention tends to increase when vehicles get closer, as shown in \autoref{fig:distance}. It can also be very sensitive to small variations in the traffic state, as reflected in \autoref{fig:sensitivity}. A full episode showcasing interactions with several vehicles is shown in \autoref{fig:episode}.
 
 
 \begin{figure}[tp]
@@ -426,7 +427,7 @@ In any given state, the attention matrix can be visualized in the following way:
 
 \paragraph{Exploiting interaction patterns}
 
-The priority rules are not enforced through rewards but interactions: based on the defined road priorities, some vehicles will take way to the ego-vehicle while others will not. By changing which is a priority road, we can influence the rules of interactions which affects the learnt behaviour. In \autoref{fig:priority}, we compare two policies placed in the exact same initial state and observe how their decisions are affected by their model of how incoming vehicles interact with them. This difference showcases the ability of our proposed architecture to discover and exploit such interaction patterns.
+The agent decisions regarding right of way are not enforced through rewards but interactions: based on the defined road priorities, some vehicles will take way to the ego-vehicle while others will not. By changing which is a priority road, we can influence the rules of interactions which affects the learnt behaviour. In \autoref{fig:priority}, we compare two policies placed in the exact same initial state and observe how their decisions are affected by their internal model of how incoming vehicles interact with them. This difference showcases the ability of our proposed architecture to discover and exploit such interaction patterns.
 
  \begin{figure}[htp]
  	\centering
