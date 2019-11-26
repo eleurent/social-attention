@@ -1,0 +1,140 @@
+
+\newcommand*{\vcenteredhbox}[1]{\begingroup
+	\setbox0=\hbox{#1}\parbox{\wd0}{\box0}\endgroup}
+
+% Arrows
+\newcommand{\incarrow}{{\includegraphics[height=0.7\baselineskip]{./img/arrow_list}}}
+
+% Colors for slides
+\definecolor{rouge1}{RGB}{226,0,38}  % red P
+\definecolor{orange1}{RGB}{243,154,38}  % orange P
+\definecolor{jaune}{RGB}{254,205,27}  % jaune P
+\definecolor{blanc}{RGB}{255,255,255} % blanc P
+
+\definecolor{rouge2}{RGB}{230,68,57}  % red S
+\definecolor{orange2}{RGB}{236,117,40}  % orange S
+\definecolor{taupe}{RGB}{134,113,127} % taupe S
+\definecolor{gris}{RGB}{91,94,111} % gris S
+\definecolor{bleu1}{RGB}{38,109,131} % bleu S
+\definecolor{bleu2}{RGB}{28,50,114} % bleu S
+\definecolor{vert1}{RGB}{133,146,66} % vert S
+\definecolor{vert3}{RGB}{20,200,66} % vert S
+\definecolor{vert2}{RGB}{157,193,7} % vert S
+\definecolor{vertsolarized}{RGB}{211,233,219} % vert S
+\definecolor{darkyellow}{RGB}{233,165,0}  % orange S
+\definecolor{lightgray}{rgb}{0.9,0.9,0.9}
+\definecolor{darkgray}{rgb}{0.6,0.6,0.6}
+
+% Highlights for slides
+\newcommand{\rcol}[1]{\textcolor{red}{\textit{#1}}}
+%\newcommand{\eqrcol}[1]{\textcolor{red}{#1}}
+%\newcommand{\eqrcolb}[1]{\textcolor{red}{\boldsymbol{#1}}}
+\newcommand{\gcol}[1]{\textcolor{vert3}{\textit{#1}}}
+%\newcommand{\eqgcol}[1]{\textcolor{vert3}{#1}}
+%\newcommand{\eqgcolb}[1]{\textcolor{vert3}{\boldsymbol{#1}}}
+\newcommand{\blcol}[1]{\textcolor{blue}{\textit{#1}}}
+%\newcommand{\eqbcol}[1]{\textcolor{blue}{#1}}
+%\newcommand{\eqbcolb}[1]{\textcolor{blue}{\boldsymbol{#1}}}
+\newcommand{\ycol}[1]{\textcolor{darkyellow}{\textit{#1}}}
+\newcommand{\eqycol}[1]{\textcolor{darkyellow}{#1}}
+
+\newcommand{\rcolbm}[1]{$\textcolor{red}{\boldsymbol{#1}}$}
+\newcommand{\rcolb}[1]{\textcolor{red}{\textit{\textbf{#1}}}}
+\newcommand{\gcolb}[1]{\textcolor{vert3}{\textit{\textbf{#1}}}}
+\newcommand{\bcolb}[1]{\textcolor{blue}{\textit{\textbf{#1}}}}
+\newcommand{\ycolb}[1]{\textcolor{darkyellow}{\textit{\textbf{#1}}}}
+
+% Colored boxes
+\newcounter{ColoredBoxesCounter}
+\newcommand{\highlightnew}[3][(0.0,-0.1)(-0.0,0.3)]{
+\hfsetfillcolor{#2!20}
+\hfsetbordercolor{#2!80}
+\tikzmarkin{\theColoredBoxesCounter}#1
+#3
+\tikzmarkend{\theColoredBoxesCounter}
+\stepcounter{ColoredBoxesCounter}
+}
+
+\newcommand{\highlight}[2][yellow]{\mathchoice%
+{\colorbox{#1}{$\displaystyle#2$}}%
+{\colorbox{#1}{$\textstyle#2$}}%
+{\colorbox{#1}{$\scriptstyle#2$}}%
+{\colorbox{#1}{$\scriptscriptstyle#2$}}}%
+
+\newcommand{\eqrcol}[1]{\highlight[red!20]{#1}}
+\newcommand{\eqrcolb}[1]{\highlight[red!20]{\boldsymbol{#1}}}
+\newcommand{\eqgcol}[1]{\highlight[vert3!20]{#1}}
+\newcommand{\eqgcolb}[1]{\highlight[vert3!20]{\boldsymbol{#1}}}
+\newcommand{\eqbcol}[1]{\highlight[blue!20]{#1}}
+\newcommand{\eqbcolb}[1]{\highlight[blue!20]{\boldsymbol{#1}}}
+
+\colorlet{redp}{red!20} % vert S
+\colorlet{greenp}{vert3!20} % vert S
+\colorlet{bluep}{blue!20} % vert S
+\colorlet{yellowp}{yellow!20} % vert S
+
+\newcommand{\hl}[3][\fboxsep1pt]{{#1\colorbox{#2}{#3}}}%
+
+\newcommand{\hlr}[1]{\hl{redp}{#1}}
+\newcommand{\hlg}[1]{\hl{greenp}{#1}}
+\newcommand{\hlb}[1]{\hl{bluep}{#1}}
+\newcommand{\hly}[1]{\hl{yellowp}{#1}}
+
+\newcommand{\hler}[1]{\hl[\fboxsep0pt]{redp}{$\displaystyle {#1}$}}
+\newcommand{\hleg}[1]{\hl[\fboxsep0pt]{greenp}{$\displaystyle {#1}$}}
+\newcommand{\hleb}[1]{\hl[\fboxsep0pt]{bluep}{$\displaystyle {#1}$}}
+
+\newcommand{\hlbr}[1]{\hl[\fboxsep0pt]{redp}{$\displaystyle \mathbf{#1}$}}
+\newcommand{\hlbg}[1]{\hl[\fboxsep0pt]{greenp}{$\displaystyle \mathbf{#1}$}}
+\newcommand{\hlbb}[1]{\hl[\fboxsep0pt]{bluep}{$\displaystyle \mathbf{#1}$}}
+
+\newcommand{\vph}{\vphantom{A_A^A}}
+
+% Box for algorithms
+\newlength{\minipagewidth}
+\newlength{\minipagewidthx}
+\setlength{\minipagewidth}{\columnwidth}
+\setlength{\minipagewidthx}{\columnwidth}
+\setlength{\fboxsep}{0.1mm}
+\addtolength{\minipagewidth}{-\fboxrule}
+\addtolength{\minipagewidth}{-\fboxrule}
+\addtolength{\minipagewidth}{-\fboxsep}
+\addtolength{\minipagewidth}{-\fboxsep}
+\addtolength{\minipagewidthx}{+\fboxsep}
+\newcommand{\bookbox}[1]{\small
+\par\medskip\noindent
+\framebox[\columnwidth]{
+\begin{minipage}{\minipagewidth} {#1} \end{minipage} } \par\medskip }
+
+\newcommand{\bookboxx}[1]{
+\par\medskip\noindent
+\framebox[\columnwidth]{
+\begin{minipage}[t]{0.98\columnwidth} {\par\smallskip#1\par\smallskip} \end{minipage} } \par\medskip }
+
+
+\usepackage{array}
+\newcolumntype{L}[1]{>{\raggedright\let\newline\\\arraybackslash\hspace{-3.1cm}}m{#1}}
+\newcolumntype{C}[1]{>{\centering\let\newline\\\arraybackslash\hspace{135pt}}m{#1}}
+\newcolumntype{R}[1]{>{\raggedleft\let\newline\\\arraybackslash\hspace{-10pt}}m{#1}}
+
+\newenvironment{myfont}{\fontfamily{kurier}\selectfont}{\par}
+\newenvironment{myfont2}{\fontfamily{epigrafica}\selectfont}{\par}
+
+% Border color of content boxes
+\definecolor{bordercol}{RGB}{0,0,0}  %black
+% Background color for the header in the content boxes (left side)
+\definecolor{headercol1}{RGB}{200,0,0}        %red:RGB {200,0,0} 
+% Background color for the header in the content boxes (right side) 
+\definecolor{headercol2}{rgb}{1.0,0.49,0.0}        %orange:rgb {1.0,0.49,0.0}
+% Text color for the header text in the content boxes
+\definecolor{headerfontcol}{rgb}{1,1,1}  %white
+% Background color for the content in the boxes
+\definecolor{boxcolor}{rgb}{1,1,1} 
+
+\definecolor{lightblue}{rgb}{0.145,0.6666,1}
+
+\newsavebox\CBox
+\newcommand\hcancel[2][0.5pt]{%
+  \ifmmode\sbox\CBox{$#2$}\else\sbox\CBox{#2}\fi%
+  \makebox[0pt][l]{\usebox\CBox}%  
+  \rule[0.3\ht\CBox-#1/2]{\wd\CBox}{#1}}
