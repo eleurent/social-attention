@@ -23,4 +23,30 @@ We study the design of learning architectures for behavioural planning in a dens
 <p align="center"><video src="assets/straight.mp4" width="600" height="600" controls preload></video></p>
 
 ## Reproduce the experiments
-```Anonymized```
+
+1. Install the [highway-env](https://github.com/eleurent/highway-env) environment
+
+`pip install --user git+https://github.com/eleurent/highway-env`
+
+2. Install the [rl-agents](https://github.com/eleurent/rl-agents) implementations
+
+`pip install --user git+https://github.com/eleurent/rl-agents`
+
+3. Train the agents
+(repeat for several seeds)
+
+* MLP/List
+
+`python experiments.py evaluate configs/IntersectionEnv/env.json configs/IntersectionEnv/agents/DQNAgent/baseline.json --train --episodes=4000 --name-from-config`
+
+* CNN/Grid
+
+`python experiments.py evaluate configs/IntersectionEnv/env_grid_dense.json configs/IntersectionEnv/agents/DQNAgent/grid_convnet.json --train --episodes=4000 --name-from-config`
+
+* Ego-Attention
+
+`python experiments.py evaluate configs/IntersectionEnv/env.json configs/IntersectionEnv/agents/DQNAgent/ego_attention_2h.json --train --episodes=4000 --name-from-config`
+
+4. Visualize the results
+
+`python analyze.py run out/IntersectionEnv/DQNAgent/`
