@@ -37,15 +37,21 @@ We study the design of learning architectures for behavioural planning in a dens
 
 * MLP/List
 
-`python experiments.py evaluate configs/IntersectionEnv/env.json configs/IntersectionEnv/agents/DQNAgent/baseline.json --train --episodes=4000 --name-from-config`
+```python experiments.py evaluate configs/IntersectionEnv/env.json \
+                                  configs/IntersectionEnv/agents/DQNAgent/baseline.json \
+                                  --train --episodes=4000 --name-from-config```
 
 * CNN/Grid
 
-`python experiments.py evaluate configs/IntersectionEnv/env_grid_dense.json configs/IntersectionEnv/agents/DQNAgent/grid_convnet.json --train --episodes=4000 --name-from-config`
+```python experiments.py evaluate configs/IntersectionEnv/env_grid_dense.json \
+                                  configs/IntersectionEnv/agents/DQNAgent/grid_convnet.json \
+                                  --train --episodes=4000 --name-from-config```
 
 * Ego-Attention
 
-`python experiments.py evaluate configs/IntersectionEnv/env.json configs/IntersectionEnv/agents/DQNAgent/ego_attention_2h.json --train --episodes=4000 --name-from-config`
+```python experiments.py evaluate configs/IntersectionEnv/env.json \
+                                  configs/IntersectionEnv/agents/DQNAgent/ego_attention_2h.json \
+                                  --train --episodes=4000 --name-from-config```
 
 4. Visualize the results
 
