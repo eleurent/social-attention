@@ -1,2 +1,7 @@
 theme: jekyll-theme-cayman
 title: Social Attention for Autonomous Decision-Making in Dense Traffic
+description: Edouard Leurent, Jean Mercat
+
+github:
+  repository_url: https://github.com/eleurent/rl-agents
+  paper_url: https://github.com/eleurent/social-attention
