@@ -340,7 +340,7 @@ We evaluate three different agents, whose characteristics are summarised in \aut
 			\toprule
 			Architecture & \MLPL & \CNNG & \EgoAtt \\
 			\midrule 
-			Input sizes & [15, 7] & [11, 11, 7] & [1-15, 7] \\
+			Input sizes & [15, 7] & [32, 32, 7] & [1-15, 7] \\
 			Layers sizes & [128, 128] &  \makecell[tc]{Convolutional layers: 3 \\ Kernel Size: 2 \\
 			Stride: 2 \\ Head: [20]} & \makecell[tl]{Encoder: [64, 64] \\Attention: 2 heads, $d_k=32$ \\ Decoder: [64, 64]} \\
 			Number of parameters & 3.0e4 & 3.2e4 & 3.4e4 \\
