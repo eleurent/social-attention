@@ -23,6 +23,7 @@
 \usepackage[utf8]{inputenc}
 \usepackage[font=normalsize,labelfont=bf]{caption} % Required for specifying captions to tables and figures
 \captionsetup{justification=centering}
+
 \usepackage{booktabs} % Horizontal rules in tables
 \usepackage{lmodern}
 \usepackage{relsize} % Used for making text smaller in some places
@@ -37,10 +38,8 @@
 \usepackage{setspace}
 \usepackage{xspace}
 \usepackage{noReferences}
-\usepackage{caption}
 \usepackage{tikz}
 \usepackage[customcolors]{hf-tikz}
-%\usepackage{subcaption}
 \usepackage{epsf}
 \usepackage{amsmath}
 \usepackage{mathtools}
@@ -72,6 +71,7 @@
 \usepackage{array, makecell}
 \usepackage{pgfplots}
 \usetikzlibrary{intersections}
+\usepackage{pifont}
 
 
 \bibliography{../budgeted_rl.bib}
@@ -114,14 +114,14 @@ eyecatcher=true
 %----------------------------------------------------------------------------------------
 %
 {
-\includegraphics[width=15em]{./img/companies}
+\includegraphics[width=10em]{./img/companies}
 }
 {
 Social Attention for Autonomous Decision-Making in Dense Traffic
 }
 {
 Edouard Leurent, Jean Mercat
-\vspace{-2\baselineskip}
+\vspace{-4\baselineskip}
 }
 {
 \includegraphics[width=12em]{./img/inria_sc}
@@ -137,33 +137,37 @@ Edouard Leurent, Jean Mercat
 
 \textbf{Behavioural Planning}
 
+\begin{itemize}
+	\item \hlg{High-level} decisions: lane, stop or go
+	\item In \hlr{interaction} with other drivers
+\end{itemize}
+
 \textbf{Reinforcement Learning}
 
-\begin{align*}
-V^\pi(s) &\eqdef \expectedvalue\left[\sum_{t=0}^\infty \gamma^t R(s_t, a_t)\right]\\
-Q^\pi(s, a) &\eqdef R(s, a) + \gamma \expectedvalueover{s'\sim P(s'|s, a)} V^\pi(s')
-\end{align*}
+\begin{equation*}
+Q^*(s, a) \eqdef \max_\pi \expectedvalue\left[\sum_{t=0}^\infty \gamma^t R(s_t, a_t)\condbar \substack{
+s_0=s\\a_0=a
+}
+\right]
+\end{equation*}
 
-The optimal action-value function $Q^* =  \max_\pi Q^\pi(s)$ satisfies the Bellman Optimality Equation:
+Bellman Optimality Equation:
 \begin{equation*}
 Q^*(s, a) = \expectedvalueover{s'\sim P(s'|s, a)} \max_{a'\in A} \left[R(s, a) + \gamma Q^*(s', a')\right]
 \end{equation*}
-
 }
 
 %----------------------------------------------------------------------------------------
 %	Setting
 %----------------------------------------------------------------------------------------
-\headerbox{\textsc{Setting}}{name=setting,span=1,column=0,row=0,below=motivation}{
+\headerbox{\textsc{State Representation}}{name=setting,span=1,column=0,row=0,below=motivation}{
 
-\textbf{State representations for social interactions}
+\textbf{Representing social interactions}
 
+A joint state $s$ of $N+1$ observed vehicles
 \begin{align*}
-s = \left( s_i \right)_{i \in [0, N]}
-\end{align*}
-where
-\begin{align*}
-s_i = \begin{bmatrix}
+s &= \left( s_i \right)_{i \in [0, N]}\\
+s_i &= \begin{bmatrix}
 x_i & y_i & v^x_i & v^y_i & \cos\psi_i & \sin \psi_i
 \end{bmatrix}^T
 \label{eq:coordinates}
@@ -172,31 +176,37 @@ x_i & y_i & v^x_i & v^y_i & \cos\psi_i & \sin \psi_i
 
 \begin{center}
 	\includegraphics[width=0.35\textwidth]{../img/coordinates}
-	
-	List of features representation
+	\captionof*{figure}{List of features representation}
 \end{center}
 
-\textbf{Requirements for function approximation}
+\textbf{Issues related to function approximation}
 
 \begin{enumerate}
-	\item Permutation Invariance
+	\item \hlg{Variable} size
+    \begin{itemize}
+		\item[\incarrow] usual models accept \hlr{fixed-size} inputs
+	\end{itemize}
 
+	\item \hlr{Sensitivity} to the ordering
+	\begin{itemize}
+		\item we want the policy to be \hlg{permutation-invariant}:
+	\end{itemize}
 \begin{align*}
 \forall\tau \in \mathfrak{S}_N, \qquad &\pi(\cdot|(s_0, s_1,\dotsc,s_N)) = \\ &\pi(\cdot|(s_0, s_{\tau(1)},\dotsc,s_{\tau(N)}))
 \end{align*}
-
-\item Variable size
-
 \end{enumerate}
 
-
-
-
+\textbf{A common solution}
 \begin{center}
 	\includegraphics[width=0.35\textwidth]{../img/map}
-	
-	Occupancy grid representation
+	\captionof*{figure}{Occupancy grid representation}
 \end{center}
+
+\begin{itemize}[nolistsep]
+	\item[\hlg{\checkmark}] Fixed-size
+	\item[\hlg{\checkmark}] Does not depend on an ordering
+	\item[\hlr{\xmark}] Suffers from an \hlr{accuracy / size tradeoff}
+\end{itemize}
 
 }
 
@@ -206,111 +216,24 @@ x_i & y_i & v^x_i & v^y_i & \cos\psi_i & \sin \psi_i
 %----------------------------------------------------------------------------------------
 \headerbox{Model Architecture}{name=archi,column=1,span=2}{
 
-\textbf{Self-Attention}
-\begin{equation}
-\text{output}=\underbrace{\sigma\left(\frac{QK^T}{\sqrt{d_k}}\right)}_{\text{attention matrix}}V
-\label{eq:selfattention}
-\end{equation}
-
-
 \begin{center}
+	\begin{minipage}{0.4\textwidth}
+		\includegraphics[trim={3.8cm 22.5cm 10cm 2.5cm}, clip, page=1, width=\linewidth]{img/architecture}
+		\captionof*{figure}{Model architecture}
+		\begin{itemize}
+			\item[\hlg{\checkmark}] Inputs can have a {variable size}
+			\item[\hlg{\checkmark}] Based on a dot product
+			\begin{itemize}
+				\item[$\incarrow$] {permutation-invariant}
+			\end{itemize}
+			\item[\hlg{\checkmark}] Compact size with no accuracy loss
+		\end{itemize}
+	\end{minipage}
+	\begin{minipage}{0.59\textwidth}
+		\includegraphics[trim={3.8cm 18.3cm 5.8cm 2.5cm}, clip, page=2, width=\linewidth]{img/architecture}
+		\captionof*{figure}{Ego-attention block}
+	\end{minipage}
 
-\begin{tikzpicture}
-	\node(X1){ego};
-	\node[below of=X1, node distance=0.7cm](X2){vehicle$_{1}$};
-	\node[below of=X2, node distance=0.6cm](X3){$\vdots$};
-	\node[below of=X3, node distance=0.7cm](X4){vehicle$_{N}$};
-	
-	\node[draw, right of=X1, node distance=1.6cm, rectangle](ENC1){Encoder};
-	\node[draw, right of=X2, node distance=1.6cm, rectangle](ENC2){Encoder};
-	\node[below of=ENC2, node distance=0.6cm](ENC3){$\vdots$};
-	\node[draw, right of=X4, node distance=1.6cm, rectangle](ENC4){Encoder};
-	
-	\path (X1) edge (ENC1);
-	\path (X2) edge (ENC2);
-	\path (X4) edge (ENC4);
-	
-	
-	\node[draw, rectangle, right of=ENC1, node distance=1.6cm, below=-0.4cm, fill=white](TRANS3){\rotatebox{90}{ Ego-attention }};
-	\node[draw, rectangle, right of=ENC1, node distance=1.5cm, below=-0.3cm, fill=white](TRANS2){\rotatebox{90}{ Ego-attention }};
-	\node[draw, rectangle, right of=ENC1, node distance=1.4cm, below=-0.2cm, fill=white](TRANS1){\rotatebox{90}{ Ego-attention }};
-	
-	\draw (ENC1.east) -| (TRANS1.west);
-	\draw (ENC2.east) -| (TRANS1.west);
-	\draw (ENC4.east) -| (TRANS1.west);
-	
-	
-	\node[draw, right of=ENC1, node distance=2.8cm, rectangle](DEC1){Decoder};
-	
-	\draw (TRANS1.east) |- (DEC1.west);
-	
-	\node[right of=DEC1, node distance=1.2cm](Y1){Q};
-	
-	\draw (DEC1.east) -- (Y1.west);
-\end{tikzpicture}
-\begin{tikzpicture}[scale=0.7, every node/.style={scale=0.7}]
-\node(X1){ego encoding};
-\node[below of=X1, node distance=2cm](X2){$\vdots$};
-\node[below of=X2, node distance=2cm](X3){vehicle$_{N}$ encoding};
-
-\coordinate[right of= X1, node distance=2cm](X1b){};
-
-\draw (X1) -- (X1b);
-
-\node[draw, right of=X1b, node distance=1cm](LK1){$L_{k}$};
-\node[draw, below of=LK1, node distance=1cm](LV1){$L_{v}$};
-\node[draw, above of=LK1, node distance=1cm](LQ1){$L_{q}$};
-
-\draw (X1b) -- (LQ1);
-\draw (X1b) -- (LK1);
-\draw (X1b) -- (LV1);
-
-
-\node[right of=LQ1, node distance=1cm](Q1){$\mathbf{q}_0$};
-\node[right of=LK1, node distance=1cm](K1){$\mathbf{k}_0$};
-\node[right of=LV1, node distance=1cm](V1){$\mathbf{v}_0$};
-
-\draw (LQ1) -- (Q1);
-\draw (LK1) -- (K1);
-\draw (LV1) -- (V1);
-
-\coordinate[right of= X3, node distance=2cm](X3b){};
-
-\draw (X3) -- (X3b);
-
-\node[draw, right of=X3b, node distance=1cm](LK3){$L_{k}$};
-\node[draw, below of=LK3, node distance=1cm](LV3){$L_{v}$};
-
-\draw (X3b) -- (LK3);	
-\draw (X3b) -- (LV3);
-
-\node[right of=LK3, node distance=1cm](K3){$\mathbf{k}_{n}$};
-\node[right of=LV3, node distance=1cm](V3){$\mathbf{v}_{n}$};
-
-\draw (LK3) -- (K3);
-\draw (LV3) -- (V3);
-
-\coordinate[right of=Q1, node distance=0.3cm](TOP){};
-\coordinate[right of=V3, node distance=0.3cm](BOT){};
-\draw[decorate,decoration={brace}] (TOP) -- node[left=5pt]{} (BOT);
-
-\node[right of=X2, text width=3cm, node distance=5.5cm](EQ){
-};
-
-\node[draw, right of=X2, node distance=8.3cm](EQ2){
-	\footnotesize $\sigma\left(\frac{QK^T}{\sqrt{d_k}}\right)V$};
-
-\coordinate[left of=EQ2, node distance=1.6cm, above=2.2cm](TOP2){};
-\coordinate[left of=EQ2, node distance=1.5cm, below=0.0cm](MID2){};
-\coordinate[left of=EQ2, node distance=1.6cm, below=2.2cm](BOT2){};
-\draw[decorate,decoration={brace}] (TOP2) -- node[left=5pt]{} (BOT2);
-\draw (MID2) -- (EQ2);
-
-\node[right of=EQ2, node distance=2cm](OUT){output};
-\draw (EQ2) -- (OUT);
-
-\draw[draw=black, dashed] (1.75cm, -5.5cm) rectangle (9.5cm,1.5cm);
-\end{tikzpicture}
 
 \end{center}
 
@@ -323,51 +246,57 @@ x_i & y_i & v^x_i & v^y_i & \cos\psi_i & \sin \psi_i
 %
 \headerbox{Experiments}{name=experiments,span=2,column=1,below=archi, above=bottom}{ 
 \begin{center}
-	\textbf{Agents}
-	
+	\captionof*{table}{\textbf{Agents}}
 	\begin{tabular}{lccc}
 		\toprule
 		Agent & \MLPL & \CNNG & \EgoAtt \\
 		\midrule 
-		Input sizes & [15, 7] & [11, 11, 7] & [1-15, 7] \\
+		Input sizes & [15, 7] & [32, 32, 7] & [~$\boldsymbol{\cdot}$~, 7] \\
 		Layers sizes & [128, 128] &  \makecell[tc]{Convolutional layers: 3 \\ Kernel Size: 2 \\
-			Stride: 2 \\ Head: [20]} & \makecell[tl]{Encoder: [64, 64] \\Attention: 2 heads, $d_k=32$ \\ Decoder: [64, 64]} \\
+			Stride: 2 \\ Head: [20]} & \makecell[tl]{Encoder: [64, 64] \\Attention: 2 heads\\\phantom{Attention: }$d_k=32$ \\ Decoder: [64, 64]} \\
 		Number of parameters & 3.0e4 & 3.2e4 & 3.4e4 \\
-		Variable input size & No & No &  {Yes}  \\
-		Permutation invariant & No & {Yes} &  {Yes} \\
+		Variable input size & \hlr{No} & \hlr{No} &  \hlg{Yes}  \\
+		Permutation invariant & \hlr{No} & \hlg{Yes} &  \hlg{Yes} \\
 		\bottomrule
 	\end{tabular}
 \end{center}
 
 \begin{center}
-	\textbf{Performances}
-	
+	\captionof*{figure}{\textbf{Performances}}
 	\includegraphics[width=0.32\linewidth]{../img/total_reward}
-	\includegraphics[width=0.32\linewidth]{../img/length}
 	\includegraphics[width=0.32\linewidth]{../img/velocity}
+	\includegraphics[width=0.32\linewidth]{../img/length}
 \end{center}
 
 \begin{center}
-\textbf{Interpretation}
+\textbf{Attention visualisation}
 
-\includegraphics[width=0.26\linewidth]{../img/head_specialization}
-\includegraphics[width=0.28\linewidth]{../img/distances}
-\includegraphics[width=0.21\linewidth]{../img/watch1}
-\includegraphics[width=0.21\linewidth]{../img/watch2}
+\begin{minipage}[b]{0.26\textwidth}
+\includegraphics[width=\linewidth]{../img/head_specialization}
+\captionof*{figure}{Head specialisation}
+\end{minipage}
+\begin{minipage}[b]{0.28\textwidth}
+	\includegraphics[width=\linewidth]{../img/distances}
+\captionof*{figure}{Distance}
+\end{minipage}
+\begin{minipage}[b]{0.42\textwidth}
+	\includegraphics[width=0.49\linewidth]{../img/watch1}
+	\includegraphics[width=0.49\linewidth]{../img/watch2}
+	\captionof*{figure}{Sensitivity to uncertainty}
+\end{minipage}
 
-Head specialisation \qquad\qquad\qquad Distance \qquad\qquad\qquad\qquad\qquad Sensitivity to uncertainty \qquad\qquad\qquad\qquad
-
+\begin{center}
 \includegraphics[width=.159\linewidth]{../img/episode1}
 \includegraphics[width=.159\linewidth]{../img/episode2}
 \includegraphics[width=.159\linewidth]{../img/episode3}
 \includegraphics[width=.159\linewidth]{../img/episode4}
 \includegraphics[width=.159\linewidth]{../img/episode5}
 \includegraphics[width=.159\linewidth]{../img/episode6}
+\captionof*{figure}{A full episode}
+\end{center}
 
-A full episode
-
-\includegraphics[width=0.2\linewidth]{../img/priority1}
-\includegraphics[width=0.2\linewidth]{../img/priority2}
+\includegraphics[width=0.18\linewidth]{../img/priority1}
+\includegraphics[width=0.18\linewidth]{../img/priority2}
 
 Exploiting interaction patterns
 \end{center}
@@ -379,7 +308,7 @@ Exploiting interaction patterns
 %----------------------------------------------------------------------------------------
 %	Acknowledgements
 %----------------------------------------------------------------------------------------
-\headerbox{Acknowledgements}{name=ack,column=0,span=1,below=setting}{
+\headerbox{Acknowledgements}{name=ack,column=0,span=1,below=setting, above=bottom}{
 This work has been supported by CPER Nord-Pas de Calais/FEDER DATA Advanced data science and technologies 2015-2020, the French Ministry of Higher Education and Research, INRIA, and the French Agence Nationale de la Recherche (ANR).
 }
 
@@ -387,13 +316,13 @@ This work has been supported by CPER Nord-Pas de Calais/FEDER DATA Advanced data
 %----------------------------------------------------------------------------------------
 %	References
 %----------------------------------------------------------------------------------------
-\headerbox{References}{name=refs,column=0,span=1,below=ack, above=bottom}{
-    {
-    \AtNextBibliography{\footnotesize}
-    \setlength{\bibitemsep}{3pt}
-    \printbibliography[heading=none]
-    }
-}
+%\headerbox{References}{name=refs,column=0,span=1,below=ack, above=bottom}{
+%    {
+%    \AtNextBibliography{\footnotesize}
+%    \setlength{\bibitemsep}{3pt}
+%    \printbibliography[heading=none]
+%    }
+%}
 
 
 \end{poster}
