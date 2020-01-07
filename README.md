@@ -4,6 +4,7 @@ We study the design of learning architectures for behavioural planning in a dens
 
 ## Videos
 
+*(Only supported on the [github page](https://eleurent.github.io/social-attention/))*
 
 ### Full episode
 <p align="center"><video src="assets/1_episode.mp4" width="600" height="600" controls preload></video></p>
