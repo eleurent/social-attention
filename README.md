@@ -29,12 +29,14 @@ We study the design of learning architectures for behavioural planning in a dens
 
 `pip install --user git+https://github.com/eleurent/highway-env`
 
-2. Install the [rl-agents](https://github.com/eleurent/rl-agents) implementations
+2. Install the [rl-agents](https://github.com/eleurent/rl-agents) implementations, and clone the repository.
 
 `pip install --user git+https://github.com/eleurent/rl-agents`
 
 3. Train the agents
 (repeat for several seeds)
+
+```cd <path/to/rl-agents>/scripts```
 
 * MLP/List
 
