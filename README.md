@@ -36,7 +36,7 @@ We study the design of learning architectures for behavioural planning in a dens
 3. Train the agents
 (repeat for several seeds)
 
-```cd <path/to/rl-agents>/scripts```
+`cd <path/to/rl-agents>/scripts`
 
 * MLP/List
 
@@ -64,4 +64,7 @@ python experiments.py evaluate configs/IntersectionEnv/env.json \
 
 4. Visualize the results
 
+`tensorboard --logdir out/IntersectionEnv`
+
+or
 `python analyze.py run out/IntersectionEnv/DQNAgent/`
