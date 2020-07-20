@@ -23,9 +23,7 @@ We study the design of learning architectures for behavioural planning in a dens
 <p align="center"><video src="assets/right.mp4" width="600" height="600" controls preload></video></p>
 <p align="center"><video src="assets/straight.mp4" width="600" height="600" controls preload></video></p>
 
-## Try it on Google Colab [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/eleurent/highway-env/blob/master/scripts/intersection_social_dqn.ipynb)
-
-## Reproduce the experiments
+## Reproduce the experiments [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/eleurent/highway-env/blob/master/scripts/intersection_social_dqn.ipynb)
 
 1. Install the [highway-env](https://github.com/eleurent/highway-env) environment
 
