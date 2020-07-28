@@ -156,7 +156,7 @@
 %\RequirePackage[l2tabu, orthodox]{nag}
 \usetikzlibrary{decorations}
 \usetikzlibrary{fadings}
-\usetikzlibrary{decorations.pathmorphing}
+\usetikzlibrary{snakes}
 \usetikzlibrary{calc}
 
 
@@ -182,19 +182,19 @@
 \DeclareOptionX{portrait}{}
 
 \newcommand{\baposter@setfinalpapersize}[2]{%
-\if@geometryKnowsThisSize
-  \setlength{\baposter@finalpaperwidth}{#1}%
-  \setlength{\baposter@finalpaperheight}{#2}%
-\else
-\if@landscape
-% Transpose length, if geometry does not handle the papersize based on the key
-  \setlength{\baposter@finalpaperwidth}{#2}%
-  \setlength{\baposter@finalpaperheight}{#1}%
-\else
-  \setlength{\baposter@finalpaperwidth}{#1}%
-  \setlength{\baposter@finalpaperheight}{#2}%
-\fi
-\fi
+	\if@geometryKnowsThisSize
+	\setlength{\baposter@finalpaperwidth}{#1}%
+	\setlength{\baposter@finalpaperheight}{#2}%
+	\else
+	\if@landscape
+	% Transpose length, if geometry does not handle the papersize based on the key
+	\setlength{\baposter@finalpaperwidth}{#2}%
+	\setlength{\baposter@finalpaperheight}{#1}%
+	\else
+	\setlength{\baposter@finalpaperwidth}{#1}%
+	\setlength{\baposter@finalpaperheight}{#2}%
+	\fi
+	\fi
 }
 
 % Default paperwidth and paperheight = a0paper
@@ -274,13 +274,13 @@
 \typeout{BasePaperwidth=\the\baposter@basepaperwidth}
 \typeout{BasePaperheight=\the\baposter@basepaperheight}
 \usepackage[
-   paperwidth=\baposter@basepaperwidth,
-   paperheight=\baposter@basepaperheight,
-   tmargin=\baposter@basemargin,
-   bmargin=\baposter@basemargin,
-   lmargin=\baposter@basemarginleft,
-   rmargin=\baposter@basemarginright,
-   ]{geometry} 
+paperwidth=\baposter@basepaperwidth,
+paperheight=\baposter@basepaperheight,
+tmargin=\baposter@basemargin,
+bmargin=\baposter@basemargin,
+lmargin=\baposter@basemarginleft,
+rmargin=\baposter@basemarginright,
+]{geometry} 
 
 \usepackage{pgfpages}
 \if@landscape
@@ -346,16 +346,16 @@
 
 % background can be one of: shadeLR, shadeTB, plain, user, none
 \define@choicekey*+[ba]{poster}{background}%
-    [\baposter@background\baposter@backgroundnr]%
-    {shadeLR, shadeTB, plain, user, none} [plain] {%
-  \debug{Poster background: \baposter@background}
-  \renewcommand{\baposterPosterDrawBackground}[2]{
-      \csname baposter@background@\baposter@background\endcsname{##1}{##2}}
+[\baposter@background\baposter@backgroundnr]%
+{shadeLR, shadeTB, plain, user, none} [plain] {%
+	\debug{Poster background: \baposter@background}
+	\renewcommand{\baposterPosterDrawBackground}[2]{
+		\csname baposter@background@\baposter@background\endcsname{##1}{##2}}
 }{
-  \PackageWarning{baposter}{Unknown background `\baposter@background' (use
-      shadeLR, shadeTB, plain, none, or user). If user is used, you also
-      have to define \background{...}.}
-  \renewcommand{\baposterPosterDrawBackground}[2]{\baposter@background@none{##1}{##2}}
+	\PackageWarning{baposter}{Unknown background `\baposter@background' (use
+		shadeLR, shadeTB, plain, none, or user). If user is used, you also
+		have to define \background{...}.}
+	\renewcommand{\baposterPosterDrawBackground}[2]{\baposter@background@none{##1}{##2}}
 }
 
 
@@ -371,76 +371,76 @@
 % roundedleft, roundedsmall, faded; UNIMPLEMENTED: roundedright
 \edef\baposter@box@textborder@validvalues{none,bars,coils,triangles,rectangle,rounded,roundedleft,roundedsmall,faded}
 \define@choicekey*+[ba]{posterbox}{textborder}%
-    [\baposter@box@textborder\baposter@box@textbordernr]%
-    {none,bars,coils,triangles,rectangle,rounded,roundedleft,roundedright,roundedsmall,faded} [rectangle] {%
-  \debug{Text border: \baposter@box@textborder}
-  \renewcommand{\baposterBoxGetShape}{
-      \csname baposter@box@boxshape@\baposter@box@textborder\endcsname}
-  \renewcommand{\baposterBoxDrawBorder}[1]{
-      \csname baposter@box@drawborder@\baposter@box@textborder\endcsname{##1}}
+[\baposter@box@textborder\baposter@box@textbordernr]%
+{none,bars,coils,triangles,rectangle,rounded,roundedleft,roundedright,roundedsmall,faded} [rectangle] {%
+	\debug{Text border: \baposter@box@textborder}
+	\renewcommand{\baposterBoxGetShape}{
+		\csname baposter@box@boxshape@\baposter@box@textborder\endcsname}
+	\renewcommand{\baposterBoxDrawBorder}[1]{
+		\csname baposter@box@drawborder@\baposter@box@textborder\endcsname{##1}}
 }{
-  \PackageWarning{baposter}{Unknown text-border style `\baposter@box@textborder'.
-      Edit your file to choose a valid option (\baposter@box@textborder@validvalues).}
-  \renewcommand{\baposterBoxGetShape}{\baposter@boxshape@rectangle}
-  \renewcommand{\baposterBoxDrawBorder}[1]{\baposter@drawborder@rectangle{##1}}
+	\PackageWarning{baposter}{Unknown text-border style `\baposter@box@textborder'.
+		Edit your file to choose a valid option (\baposter@box@textborder@validvalues).}
+	\renewcommand{\baposterBoxGetShape}{\baposter@boxshape@rectangle}
+	\renewcommand{\baposterBoxDrawBorder}[1]{\baposter@drawborder@rectangle{##1}}
 }
 
 % boxshade can be one of: shadeLR, shadeTB, plain, none
 \define@choicekey*+[ba]{posterbox}{boxshade}%
-    [\baposter@box@boxshade\baposter@box@boxshadenr]%
-    {shadelr,shadetb,plain,none} [none] {%
-  \debug{Box shade: \baposter@box@boxshade}
-  \renewcommand{\baposterBoxDrawBackground}[2]{
-      \csname baposter@box@drawbackground@\baposter@box@boxshade\endcsname{##1}{##2}}
+[\baposter@box@boxshade\baposter@box@boxshadenr]%
+{shadelr,shadetb,plain,none} [none] {%
+	\debug{Box shade: \baposter@box@boxshade}
+	\renewcommand{\baposterBoxDrawBackground}[2]{
+		\csname baposter@box@drawbackground@\baposter@box@boxshade\endcsname{##1}{##2}}
 }{
-  \PackageWarning{baposter}{Unknown boxshade style `\baposter@boxshade'.
-      Edit your file to choose a valid option.}
-  \renewcommand{\baposterBoxDrawBackground}[2]{\baposter@box@drawbackground@none{##1}{##2}}
+	\PackageWarning{baposter}{Unknown boxshade style `\baposter@boxshade'.
+		Edit your file to choose a valid option.}
+	\renewcommand{\baposterBoxDrawBackground}[2]{\baposter@box@drawbackground@none{##1}{##2}}
 }
 
 % headershade can be one of: shade-lr, shade-tb, shade-tb-inverse, plain
 \define@choicekey*+[ba]{posterbox}{headershade}%
-    [\baposter@box@headershade\baposter@box@headershadenr]%
-    {shadelr, shadetb, shadetbinverse, plain} [shadelr] {%
-  \debug{Header shade: \baposter@box@headershade}
-  \renewcommand{\baposterHeaderSetShade}[3]{
-      \csname baposter@box@headershade@\baposter@box@headershade\endcsname{##1}{##2}{##3}}
+[\baposter@box@headershade\baposter@box@headershadenr]%
+{shadelr, shadetb, shadetbinverse, plain} [shadelr] {%
+	\debug{Header shade: \baposter@box@headershade}
+	\renewcommand{\baposterHeaderSetShade}[3]{
+		\csname baposter@box@headershade@\baposter@box@headershade\endcsname{##1}{##2}{##3}}
 }{
-  \PackageWarning{baposter}{Unknown headershade style `\baposter@box@headershade'.
-      Edit your file to choose a valid option.}
-  \renewcommand{\baposterHeaderSetShade}[3]{\baposter@box@headershade@none{##1}{##2}{##3}}
+	\PackageWarning{baposter}{Unknown headershade style `\baposter@box@headershade'.
+		Edit your file to choose a valid option.}
+	\renewcommand{\baposterHeaderSetShade}[3]{\baposter@box@headershade@none{##1}{##2}{##3}}
 }
 
 % headershape can be one of: rectangle, rounded, smallrounded, roundedleft, roundedright
 \define@choicekey*+[ba]{posterbox}{headershape}%
-    [\baposter@box@headershape\baposter@box@headershapenr]%
-    {rectangle,rounded,smallrounded,roundedleft,roundedright} [roundedright] {%
-  \debug{Header shape: \baposter@box@headershape}
-  \renewcommand{\baposterHeaderGetShape}{
-      \csname baposter@box@headershape@\baposter@box@headershape\endcsname}
-  \renewcommand{\baposterHeaderDrawText}[1]{
-      \csname baposter@box@headerdrawtext@\baposter@box@headershape\endcsname{##1}}
-  \renewcommand{\baposterHeaderDrawBorder}[1]{
-      \csname baposter@box@headerdrawborder@\baposter@box@headershape\endcsname{##1}}
+[\baposter@box@headershape\baposter@box@headershapenr]%
+{rectangle,rounded,smallrounded,roundedleft,roundedright} [roundedright] {%
+	\debug{Header shape: \baposter@box@headershape}
+	\renewcommand{\baposterHeaderGetShape}{
+		\csname baposter@box@headershape@\baposter@box@headershape\endcsname}
+	\renewcommand{\baposterHeaderDrawText}[1]{
+		\csname baposter@box@headerdrawtext@\baposter@box@headershape\endcsname{##1}}
+	\renewcommand{\baposterHeaderDrawBorder}[1]{
+		\csname baposter@box@headerdrawborder@\baposter@box@headershape\endcsname{##1}}
 }{
-  \PackageWarning{baposter}{Unknown headershape style `\baposter@headershape'.
-      Edit your file to choose a valid option.}
-  \renewcommand{\baposterHeaderGetShape}{\baposter@box@headershape@rectangle}
-  \renewcommand{\baposterHeaderDrawText}[1]{\baposter@box@headerdrawtext@rectangle{##1}}
-  \renewcommand{\baposterHeaderDrawBorder}[1]{\baposter@box@headerdrawborder@rectangle{##1}}
+	\PackageWarning{baposter}{Unknown headershape style `\baposter@headershape'.
+		Edit your file to choose a valid option.}
+	\renewcommand{\baposterHeaderGetShape}{\baposter@box@headershape@rectangle}
+	\renewcommand{\baposterHeaderDrawText}[1]{\baposter@box@headerdrawtext@rectangle{##1}}
+	\renewcommand{\baposterHeaderDrawBorder}[1]{\baposter@box@headerdrawborder@rectangle{##1}}
 }
 
 % headerborder can be one of: open, closed, none
 \define@choicekey*+[ba]{posterbox}{headerborder}%
-    [\baposter@box@headerborder\baposter@box@headerbordernr]%
-    {open,closed,none} [open] {%
-  \debug{Header border: \baposter@box@headerborder}
-%   \renewcommand{\baposterHeaderBorder}{
-%       \csname baposter@headerborder@\baposter@box@headerborder\endcsname}
+[\baposter@box@headerborder\baposter@box@headerbordernr]%
+{open,closed,none} [open] {%
+	\debug{Header border: \baposter@box@headerborder}
+	%   \renewcommand{\baposterHeaderBorder}{
+	%       \csname baposter@headerborder@\baposter@box@headerborder\endcsname}
 }{
-  \PackageWarning{baposter}{Unknown headerborder style `\baposter@headerborder'.
-      Edit your file to choose a valid option.}
-%   \renewcommand{\baposterHeaderBorder}{\baposter@box@headerborder@rectangle}
+	\PackageWarning{baposter}{Unknown headerborder style `\baposter@headerborder'.
+		Edit your file to choose a valid option.}
+	%   \renewcommand{\baposterHeaderBorder}{\baposter@box@headerborder@rectangle}
 }
 
 
@@ -467,48 +467,48 @@
 
 % Set some default values, the poster and posterbox environments can override:
 \setkeys[ba]{poster}{
-  % Debug grid
-  grid=false,
-  % Is there an eyecatcher image
-  eyecatcher=true,
-  columns={},
-  % Colours
-  bgColorOne=baposter@silver,
-  bgColorTwo=green,
-  %
-  colspacing=1em,
-  headerheight=0.1\textheight,
-  background=shadeLR,
+	% Debug grid
+	grid=false,
+	% Is there an eyecatcher image
+	eyecatcher=true,
+	columns={},
+	% Colours
+	bgColorOne=baposter@silver,
+	bgColorTwo=green,
+	%
+	colspacing=1em,
+	headerheight=0.1\textheight,
+	background=shadeLR,
 }{}
 \setkeys[ba]{posterbox}{
-  % Position
-  column=0,row=0,span=1,
-  below=notset,above=notset,
-  bottomaligned=notset,
-  aligned=notset,
-  height=auto,
-  % Name
-  name=noname,
-  % Box design: border:
-  linewidth=2pt,
-  borderColor=yellow,
-  cornerradius=1em,
-  % text box:
-  textfont={},
-  boxshade=plain,
-  boxColorOne=magenta,
-  boxColorTwo=cyan,
-  textborder=faded,
-  boxpadding=0.5em,
-  % header
-  headerfont=\scshape\Large,% or headerfont=\color{white}\textsf\textbf
-  headerFontColor=black,
-  headerColorOne=red,
-  headerColorTwo=brown,
-  headershape=rectangle,
-  headershade=shadeLR,
-  headerborder=none,
-  boxheaderheight=2em,
+	% Position
+	column=0,row=0,span=1,
+	below=notset,above=notset,
+	bottomaligned=notset,
+	aligned=notset,
+	height=auto,
+	% Name
+	name=noname,
+	% Box design: border:
+	linewidth=2pt,
+	borderColor=yellow,
+	cornerradius=1em,
+	% text box:
+	textfont={},
+	boxshade=plain,
+	boxColorOne=magenta,
+	boxColorTwo=cyan,
+	textborder=faded,
+	boxpadding=0.5em,
+	% header
+	headerfont=\scshape\Large,% or headerfont=\color{white}\textsf\textbf
+	headerFontColor=black,
+	headerColorOne=red,
+	headerColorTwo=brown,
+	headershape=rectangle,
+	headershade=shadeLR,
+	headerborder=none,
+	boxheaderheight=2em,
 }{}
 
 
@@ -518,31 +518,31 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \newcommand{\baposter@background@shadelr}[2]{
-  \debug{BAPOSTER: Using shade left right background.}
-  \begin{tikzpicture}[remember picture,overlay]%
-    \shade [shading=axis,left color=#1,right color=#2] (current page.north west)
-           rectangle(current page.south east);
-  \end{tikzpicture}%
+	\debug{BAPOSTER: Using shade left right background.}
+	\begin{tikzpicture}[remember picture,overlay]%
+	\shade [shading=axis,left color=#1,right color=#2] (current page.north west)
+	rectangle(current page.south east);
+	\end{tikzpicture}%
 }
 \newcommand{\baposter@background@shadetb}[2]{
-  \debug{BAPOSTER: Using shade top to bottom background.}
-  \begin{tikzpicture}[remember picture,overlay]%
-    \shade [shading=axis,top color=#1,bottom color=#2] (current page.north west)
-           rectangle(current page.south east);
-  \end{tikzpicture}%
+	\debug{BAPOSTER: Using shade top to bottom background.}
+	\begin{tikzpicture}[remember picture,overlay]%
+	\shade [shading=axis,top color=#1,bottom color=#2] (current page.north west)
+	rectangle(current page.south east);
+	\end{tikzpicture}%
 }
 \newcommand{\baposter@background@plain}[2]{
-  \debug{BAPOSTER: Using plain background.}
-  \begin{tikzpicture}[remember picture,overlay]%
-    \fill [fill=#1] (current page.north west) rectangle(current page.south east);
-  \end{tikzpicture}%
+	\debug{BAPOSTER: Using plain background.}
+	\begin{tikzpicture}[remember picture,overlay]%
+	\fill [fill=#1] (current page.north west) rectangle(current page.south east);
+	\end{tikzpicture}%
 }
 \newcommand{\baposter@background@user}[2]{
-  \debug{BAPOSTER: Using user background.}
-  \baposter@backgroundCmd%
+	\debug{BAPOSTER: Using user background.}
+	\baposter@backgroundCmd%
 }
 \newcommand{\baposter@background@none}[2]{
-  \debug{BAPOSTER: Using no background.}
+	\debug{BAPOSTER: Using no background.}
 }
 
 
@@ -553,32 +553,32 @@
 
 \newcommand{\baposter@box@boxshape@none}{\baposter@box@boxshape@rectangle}
 \newcommand{\baposter@box@boxshape@bars}{
-  (\baposter@box@name tnw) -- (\baposter@box@name sw) %
-  (\baposter@box@name se) -- (\baposter@box@name tne)
+	(\baposter@box@name tnw) -- (\baposter@box@name sw) %
+	(\baposter@box@name se) -- (\baposter@box@name tne)
 }
 \newcommand{\baposter@box@boxshape@coils}{\baposter@box@boxshape@bars}
 \newcommand{\baposter@box@boxshape@triangles}{\baposter@box@boxshape@bars}
 \newcommand{\baposter@box@boxshape@rectangle}{
-  (\baposter@box@name tnw) -- (\baposter@box@name sw) -- %
-  (\baposter@box@name se) -- (\baposter@box@name tne)%
+	(\baposter@box@name tnw) -- (\baposter@box@name sw) -- %
+	(\baposter@box@name se) -- (\baposter@box@name tne)%
 }
 \newcommand{\baposter@box@boxshape@faded}{
-  (\baposter@box@name tnw) -- (\baposter@box@name sw) %
-  (\baposter@box@name tne) -- (\baposter@box@name se)
-  }
+	(\baposter@box@name tnw) -- (\baposter@box@name sw) %
+	(\baposter@box@name tne) -- (\baposter@box@name se)
+}
 \newcommand{\baposter@box@boxshape@rounded}{
-  [rc] \baposter@box@boxshape@rectangle%
+	[rc] \baposter@box@boxshape@rectangle%
 }
 \newcommand{\baposter@box@boxshape@roundedsmall}{
-  [src] \baposter@box@boxshape@rectangle
+	[src] \baposter@box@boxshape@rectangle
 }
 \newcommand{\baposter@box@boxshape@roundedleft}{
-  (\baposter@box@name tnw) {[rc]-- (\baposter@box@name sw)} -- %
-  (\baposter@box@name se) -- (\baposter@box@name tne)%
+	(\baposter@box@name tnw) {[rc]-- (\baposter@box@name sw)} -- %
+	(\baposter@box@name se) -- (\baposter@box@name tne)%
 }
 \newcommand{\baposter@box@boxshape@roundedright}{
-  (\baposter@box@name tnw) -- (\baposter@box@name sw) {[rc]-- %
-  (\baposter@box@name se)} -- (\baposter@box@name tne)%
+	(\baposter@box@name tnw) -- (\baposter@box@name sw) {[rc]-- %
+		(\baposter@box@name se)} -- (\baposter@box@name tne)%
 }
 
 
@@ -588,19 +588,19 @@
 
 % These functions take no arguments
 \newcommand{\baposter@box@drawbackground@none}[2]{
-  \tikzstyle{box colors}=[]
+	\tikzstyle{box colors}=[]
 }
 \newcommand{\baposter@box@drawbackground@plain}[2]{
-  \tikzstyle{box colors}=[fill=#1]
-  \fill[box colors] \baposterBoxGetShape;
+	\tikzstyle{box colors}=[fill=#1]
+	\fill[box colors] \baposterBoxGetShape;
 }
 \newcommand{\baposter@box@drawbackground@shadelr}[2]{
-  \tikzstyle{box colors}=[shading=axis, left color=#1, right color=#2]%
-  \fill[box colors] \baposterBoxGetShape;
+	\tikzstyle{box colors}=[shading=axis, left color=#1, right color=#2]%
+	\fill[box colors] \baposterBoxGetShape;
 }
 \newcommand{\baposter@box@drawbackground@shadetb}[2]{
-  \tikzstyle{box colors}=[shading=axis, top color=#1, bottom color=#2]%
-  \fill[box colors] \baposterBoxGetShape;
+	\tikzstyle{box colors}=[shading=axis, top color=#1, bottom color=#2]%
+	\fill[box colors] \baposterBoxGetShape;
 }
 
 
@@ -612,35 +612,35 @@
 % These functions take two arguments: borderColor
 \newcommand{\baposter@box@drawborder@none}[1]{}
 \newcommand{\baposter@box@drawborder@bars}[1]{
-  \draw[color=#1] \baposterBoxGetShape;%
+	\draw[color=#1] \baposterBoxGetShape;%
 }
 \newcommand{\baposter@box@drawborder@coils}[1]{
-  \draw[color=#1,segment amplitude=0.35em,segment length=0.4em,snake=coil] \baposterBoxGetShape;%
+	\draw[color=#1,segment amplitude=0.35em,segment length=0.4em,snake=coil] \baposterBoxGetShape;%
 }
 \newcommand{\baposter@box@drawborder@triangles}[1]{
-  \draw[color=#1,segment amplitude=0.2em,segment length=0.4em,snake=triangles] \baposterBoxGetShape;%
+	\draw[color=#1,segment amplitude=0.2em,segment length=0.4em,snake=triangles] \baposterBoxGetShape;%
 }
 \newcommand{\baposter@box@drawborder@rectangle}[1]{
-  \draw[color=#1] \baposterBoxGetShape;%
+	\draw[color=#1] \baposterBoxGetShape;%
 }
 \newcommand{\baposter@box@drawborder@rounded}[1]{
-  \draw[color=#1] \baposterBoxGetShape;%
+	\draw[color=#1] \baposterBoxGetShape;%
 }
 \newcommand{\baposter@box@drawborder@roundedleft}[1]{
-  \draw[color=#1] \baposterBoxGetShape;%
+	\draw[color=#1] \baposterBoxGetShape;%
 }
 \newcommand{\baposter@box@drawborder@roundedright}[1]{
-  \draw[color=#1] \baposterBoxGetShape;%
+	\draw[color=#1] \baposterBoxGetShape;%
 }
 \newcommand{\baposter@box@drawborder@faded}[1]{
-  % This is the right way to do it, but it does not work with evince, and has problems during printing, so instead we do
-  %\draw[color=#1,path fading=south] \baposterBoxGetShape;%
-  % this
-  \foreach \x in {0,1,...,90} \draw[color=#1!\x] ($(\baposter@box@name tnw)!{(100-\x)/100}!(\baposter@box@name sw)$) -- ($(\baposter@box@name tnw)!{(100-(\x+10))/100}!(\baposter@box@name sw)$);%
-  \foreach \x in {0,1,...,90} \draw[color=#1!\x] ($(\baposter@box@name tne)!{(100-\x)/100}!(\baposter@box@name se)$) -- ($(\baposter@box@name tne)!{(100-(\x+10))/100}!(\baposter@box@name se)$);%
+	% This is the right way to do it, but it does not work with evince, and has problems during printing, so instead we do
+	%\draw[color=#1,path fading=south] \baposterBoxGetShape;%
+	% this
+	\foreach \x in {0,1,...,90} \draw[color=#1!\x] ($(\baposter@box@name tnw)!{(100-\x)/100}!(\baposter@box@name sw)$) -- ($(\baposter@box@name tnw)!{(100-(\x+10))/100}!(\baposter@box@name sw)$);%
+	\foreach \x in {0,1,...,90} \draw[color=#1!\x] ($(\baposter@box@name tne)!{(100-\x)/100}!(\baposter@box@name se)$) -- ($(\baposter@box@name tne)!{(100-(\x+10))/100}!(\baposter@box@name se)$);%
 }
 \newcommand{\baposter@box@drawborder@roundedsmall}[1]{
-  \draw[color=#1] \baposterBoxGetShape;%
+	\draw[color=#1] \baposterBoxGetShape;%
 }
 
 
@@ -652,24 +652,24 @@
 % These functions take no arguments
 % TODO: For headerborder==none, use (\baposter@box@name outer tnw) instead!
 \newcommand{\baposter@box@headershape@rectangle}{%
-  (\baposter@box@name tnw) -- (\baposter@box@name nw) -- %
-  (\baposter@box@name ne) -- (\baposter@box@name tne)%
+	(\baposter@box@name tnw) -- (\baposter@box@name nw) -- %
+	(\baposter@box@name ne) -- (\baposter@box@name tne)%
 }
 \newcommand{\baposter@box@headershape@smallrounded}{%
-  (\baposter@box@name tnw) {[src] -- (\baposter@box@name nw) -- %
-  (\baposter@box@name ne)} -- (\baposter@box@name tne)%
+	(\baposter@box@name tnw) {[src] -- (\baposter@box@name nw) -- %
+		(\baposter@box@name ne)} -- (\baposter@box@name tne)%
 }
 \newcommand{\baposter@box@headershape@roundedright}{%
-  (\baposter@box@name tnw) -- (\baposter@box@name nw) {[rc] -- %
-  (\baposter@box@name ne)} -- (\baposter@box@name tne)%
+	(\baposter@box@name tnw) -- (\baposter@box@name nw) {[rc] -- %
+		(\baposter@box@name ne)} -- (\baposter@box@name tne)%
 }
 \newcommand{\baposter@box@headershape@roundedleft}{%
-  (\baposter@box@name tnw) {[rc]-- (\baposter@box@name nw)} -- %
-  (\baposter@box@name ne) -- (\baposter@box@name tne)%
+	(\baposter@box@name tnw) {[rc]-- (\baposter@box@name nw)} -- %
+	(\baposter@box@name ne) -- (\baposter@box@name tne)%
 }
 \newcommand{\baposter@box@headershape@rounded}{%
-  (\baposter@box@name tnw) {[rc] -- (\baposter@box@name nw) -- %
-  (\baposter@box@name ne) } -- (\baposter@box@name tne)%
+	(\baposter@box@name tnw) {[rc] -- (\baposter@box@name nw) -- %
+		(\baposter@box@name ne) } -- (\baposter@box@name tne)%
 }
 
 
@@ -680,21 +680,21 @@
 
 % These functions take one argument: the header text
 \newcommand{\baposter@box@headerdrawtext@rectangle}[1]{
-  \path (\baposter@box@name nw) +(0em,-0.5\baposter@box@@boxheaderheight) node[anchor=west,inner sep=0.4em] {#1};%
+	\path (\baposter@box@name nw) +(0em,-0.5\baposter@box@@boxheaderheight) node[anchor=west,inner sep=0.4em] {#1};%
 }
 \newcommand{\baposter@box@headerdrawtext@smallrounded}[1]{
-  \path (\baposter@box@name nw) +(0.5\boxwidth,-0.5\baposter@box@@boxheaderheight) node[anchor=center] {#1};%
+	\path (\baposter@box@name nw) +(0.5\boxwidth,-0.5\baposter@box@@boxheaderheight) node[anchor=center] {#1};%
 }
 \newcommand{\baposter@box@headerdrawtext@roundedright}[1]{
-  \path (\baposter@box@name nw) +(0em,-0.5\baposter@box@@boxheaderheight)%
-        node[anchor=west,inner sep=0.4em,text depth=0.0em] {#1};%
+	\path (\baposter@box@name nw) +(0em,-0.5\baposter@box@@boxheaderheight)%
+	node[anchor=west,inner sep=0.4em,text depth=0.0em] {#1};%
 }
 \newcommand{\baposter@box@headerdrawtext@roundedleft}[1]{
-  \path (\baposter@box@name nw) +(0em,-0.5\baposter@box@@boxheaderheight)%
-        node[anchor=west,inner sep=0.4em] {#1};%
+	\path (\baposter@box@name nw) +(0em,-0.5\baposter@box@@boxheaderheight)%
+	node[anchor=west,inner sep=0.4em] {#1};%
 }
 \newcommand{\baposter@box@headerdrawtext@rounded}[1]{
-    \path (\baposter@box@name nw) +(0.5\boxwidth,-0.5\baposter@box@@boxheaderheight) node[anchor=center] {#1};%
+	\path (\baposter@box@name nw) +(0.5\boxwidth,-0.5\baposter@box@@boxheaderheight) node[anchor=center] {#1};%
 }
 
 
@@ -705,41 +705,41 @@
 
 % These functions take two arguments: headerColorOne, headerColorTwo and borderColor
 \newcommand{\baposter@box@headershade@shadelr}[3]{
-    \debug{Header-Shade: Shade Left - Right}
-    \tikzstyle{header colors}=[%
-      color=#3,%
-      shading=axis,%
-      left color=#1,%
-      right color=#2%
-    ]%
+	\debug{Header-Shade: Shade Left - Right}
+	\tikzstyle{header colors}=[%
+	color=#3,%
+	shading=axis,%
+	left color=#1,%
+	right color=#2%
+	]%
 }
 \newcommand{\baposter@box@headershade@shadetb}[3]{
-    \debug{Header-Shade: Shade Top - Bottom}
-    \tikzstyle{header colors}=[%
-      color=#3,%
-      shading=axis,%
-      top color=#1,%
-      bottom color=#2%
-    ]%
+	\debug{Header-Shade: Shade Top - Bottom}
+	\tikzstyle{header colors}=[%
+	color=#3,%
+	shading=axis,%
+	top color=#1,%
+	bottom color=#2%
+	]%
 }
 \newcommand{\baposter@box@headershade@shadetbinverse}[3]{
-    \tikzstyle{header colors}=[%
-      top color=#1!75!#2,%
-      bottom color=#2!100!#1,%
-      shading angle=20%
-    ]%
-    \colorlet{baposterHeaderFontColor}{white}%
+	\tikzstyle{header colors}=[%
+	top color=#1!75!#2,%
+	bottom color=#2!100!#1,%
+	shading angle=20%
+	]%
+	\colorlet{baposterHeaderFontColor}{white}%
 }
 \newcommand{\baposter@box@headershade@plain}[3]{
-    \debug{Header-Shade: Plain}
-    \tikzstyle{header colors}=[%
-      color=#3,%
-      fill=#1%
-    ]%
+	\debug{Header-Shade: Plain}
+	\tikzstyle{header colors}=[%
+	color=#3,%
+	fill=#1%
+	]%
 }
 \newcommand{\baposter@box@headershade@none}[3]{
-    \debug{Header-Shade: none}
-    \tikzstyle{header colors}=[]
+	\debug{Header-Shade: none}
+	\tikzstyle{header colors}=[]
 }
 
 
@@ -763,334 +763,332 @@
 %%%                       Shape of the box-header region
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \newenvironment{poster}[5]{%
-  \thispagestyle{empty}% Suppress Page Number
-  \debug{Poster Starts}%
-  % This setkeys call parses all provided options and depending on the option
-  % value, assigns different handler functions to the \baposter(Box|Header)*
-  % functions. Once that is done, we don't have to care about particular
-  % values for border, shading, etc. All we have to do is call the
-  % handler functions and let them do their job.
-  % This also allows the user to override the poster-wide defaults on a per-box
-  % basis.
-  \setkeys[ba]{posterbox,poster}{#1}%
-%
-  % TODO: Move all those assignments to the key macros!
-  % Parse Keys%
-  \colorlet{bgColorOne}{\baposter@bgColorOne}
-  \colorlet{bgColorTwo}{\baposter@bgColorTwo}
-%
-  %% Boxes%
-  \setlength{\headerheight}{\baposter@headerheight}%
-  \setlength{\colheight}{\textheight-\baposter@headerheight}%
-  \renewcommand{\@@previousbox}{notset}
-
-  \debug{Format}%
-  % Set default for columns if unset (4 for landscape, 3 for portrait)
-  \ifthenelse{\equal{\baposter@columns}{}}{%
-    \renewcommand{\baposter@columns}{\if@landscape4\else3\fi}%
-  }{}
-%
-  \debug{Columns: \baposter@columns}%
-  \setlength{\baposter@@colspacing}{\baposter@colspacing}%
-  \setlength{\colwidth}{\textwidth}%
-  \addtolength{\colwidth}{\baposter@@colspacing*(1-\baposter@columns)}%
-  \ifcase\baposter@columns\relax
-    \error{You need to have at least one column!}
-  \or % 1
-    \setlength{\colwidth}{\colwidth}%
-  \or % 2
-    \setlength{\colwidth}{0.5\colwidth}%
-  \or % 3
-    \setlength{\colwidth}{0.3333333333333\colwidth}%
-  \or % 4
-    \setlength{\colwidth}{0.25\colwidth}%
-  \or % 5
-    \setlength{\colwidth}{0.2\colwidth}%
-  \or % 6
-    \setlength{\colwidth}{0.16666666666\colwidth}%
-  \else % >6
-    \error{You do not want so many columns}
-  \fi
-%
-  \newcommand{\baposter@reference}{north west}%
-%
-  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-  % A box with a header and some content. The basic unit of the poster%
-  %---------------------------------------------------------------------------%
-  % Each box has a name and can be placed absolutely or relatively.%
-  % The only inconvenience is that you can only specify a relative position %
-  % towards an already declared box. So if you have a box attached to the %
-  % bottom, one to the top and a third one which should be inbetween, you %
-  % have to specify the top and bottom boxes before you specify the middle %
-  % box.%
-  %%
-  % below=  name of other node%
-  % above=  name of other node%
-  % aligned=name of other node%
-  % bottomaligned=name of other node%
-  % column= [0]     %
-  % row=    [0]     %
-  % span=   [1]     %
-  % height= <size in percent of column height>,[auto]%
-  % name=   [noname]%
-  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-  % Backward-compatibility definition (\headerbox command uses posterbox env):
-  \newcommand{\headerbox}[3]{%
-    \begin{posterbox}[##2]{##1}
-      ##3
-    \end{posterbox}
-  }
-
-  \newenvironment{posterbox}[2][]{%
-    \debug{Poster box options: ##1}%
-    % Override the poster-wide defaults on a per-box basis
-    \setkeys[ba]{posterbox}{##1}%
-%
-    \def\baposter@box@title{##2}
-%
-    \colorlet{borderColor}{\baposter@box@borderColor}
-    \colorlet{headerColorOne}{\baposter@box@headerColorOne}
-    \colorlet{headerColorTwo}{\baposter@box@headerColorTwo}
-    \colorlet{headerFontColor}{\baposter@box@headerFontColor}
-    \colorlet{boxColorOne}{\baposter@box@boxColorOne}
-    \colorlet{boxColorTwo}{\baposter@box@boxColorTwo}
-%
-    \setlength{\baposter@box@@cornerradius}{\baposter@box@cornerradius}%
-    \setlength{\baposter@box@@boxheaderheight}{\baposter@box@boxheaderheight}%
-    \setlength{\baposter@box@@boxpadding}{\baposter@box@boxpadding}%
-
-
-    %% The columns is always given absolute
-    % boxstartx = column * colwidth + column * colspacing
-    \setlength{\boxstartx}{(\colwidth+\baposter@@colspacing)*\baposter@box@column}%
-%
-    %% The width is gvien absolute
-    % Box Width = span * colwidth + (span-1) * colspacing
-    \setlength{\boxwidth}{\baposter@box@span\colwidth} %
-    \addtolength{\boxwidth}{\baposter@@colspacing*(\baposter@box@span-1)}%
-%
-    %% Measure the content of the box%
-    \setbox\baposter@box@content=\hbox\bgroup%
-      \begin{pgfinterruptpicture}%
-        \begin{minipage}[t]{\boxwidth-\baposter@box@@boxpadding*2}%
-          \baposter@box@textfont\bgroup%
-  }% End of posterbox preamble
-  %%% HERE COME THE ACTUAL CONTENTS OF THE HEADERBOX ENVIRONMENT
-  {% posterbox handling after contents (i.e. drawing everything)
-          \egroup%
-        \end{minipage}%
-      \end{pgfinterruptpicture}%
-    \egroup%
-    \setlength{\boxheight}{\ht\baposter@box@content}%
-    \addtolength{\boxheight}{\dp\baposter@box@content}%
-    \addtolength{\boxheight}{\baposter@box@@boxheaderheight} % Header%
-    \addtolength{\boxheight}{2\baposter@box@@boxpadding} % Inner Sep
-%
-    \ifthenelse{\equal{\baposter@box@height}{bottom}}{%
-    }{\ifthenelse{\equal{\baposter@box@height}{auto}}{%
-    }{ % Neither auto nor bottom%
-      \setlength{\boxheight}{\baposter@box@height\colheight}%
-    }}%
-%
-    %% Determine the box position%
-    \debug{Setting Coordinates}%
-    \debug{Upper Right}%
-    \debug{\baposter@box@name}%
-%
-    %%% Upper Right Corner%
-    % if below=auto, set it to the previous box
-    % TODO: We should generalize this to the previous box of the used column,
-    %       currently we use the previous box, which might be in a different column
-    \ifthenelse{\equal{\baposter@box@below}{auto}}{%
-        \edef\baposter@box@below{\@@previousbox}
-        \debug{Box \baposter@box@name  has below=auto, placing it below box \baposter@box@below.}
-    }{}
-    \xdef\@@previousbox{\baposter@box@name}
-
-    \ifthenelse{\not\equal{\baposter@box@below}{notset} }{%
-      %% Below%
-      \debug{Below}%
-      \path[shape=coordinate] (\boxstartx,0pt |- \baposter@box@below se) ++(0pt,-\baposter@@colspacing) coordinate(\baposter@box@name nw);%
-    }{%
-      \ifthenelse{\not\equal{\baposter@box@aligned}{notset} }{%
-        %% Aligned%
-        \debug{Aligned: \baposter@box@aligned}%
-        \path[shape=coordinate] (\boxstartx,0pt |- \baposter@box@aligned nw)                           coordinate(\baposter@box@name nw);%
-      }{%
-        %% Fixed%
-        \debug{Fixed}%
-        \setlength{\boxstarty}{\baposter@box@row\colheight}%
-        \path[shape=coordinate] (\boxstartx,\colheight-\boxstarty)                                                  coordinate(\baposter@box@name nw);%
-    }}%
-%
-    %% Lower Left Corner%
-    \debug{Lower Left}%
-    \ifthenelse{\equal{\baposter@box@above}{bottom}}{%
-      %% Above = Bottom%
-      \debug{Above bottom}%
-      \ifthenelse{\equal{\baposter@box@below}{notset} \and \equal{\baposter@box@aligned}{notset}}{%
-      \path[shape=coordinate] (\boxstartx,\boxheight)                                                              coordinate(\baposter@box@name nw);%
-      }{}%
-      \path[shape=coordinate] (\boxstartx+\boxwidth,0pt)                                                           coordinate(\baposter@box@name se);%
-      }{\ifthenelse{\not \equal{\baposter@box@bottomaligned}{notset}}{%
-        \path[shape=coordinate] (\boxstartx+\boxwidth,0pt |- \baposter@box@bottomaligned se)                       coordinate(\baposter@box@name se);%
-      }{{\ifthenelse{\not \equal{\baposter@box@above}{notset}}{%
-        %% Above = Node%
-        \path[shape=coordinate] (\boxstartx+\boxwidth,0pt |- \baposter@box@above nw)  +(0pt,\baposter@@colspacing) coordinate(\baposter@box@name se);%
-      }{%
-        %% Above = notset%
-        \debug{Above=not set}%
-        \ifthenelse{\equal{\baposter@box@height}{bottom}}{%
-          %% height=bottom%
-          \debug{height=bottom}%
-          \path[shape=coordinate] (\boxstartx+\boxwidth,0pt)                                                       coordinate(\baposter@box@name se);%
-        }{ %% height=auto or fixed%
-          \debug{height=auto or fixed}%
-          \path[shape=coordinate] (\baposter@box@name nw) ++(\boxwidth,-\boxheight)                                coordinate(\baposter@box@name se);%
-	  }}}}}%
-%
-        %
-    % Set coordinates relative to nw,se%
-    \debug{Fixing Coordinates}%
-    \path[shape=coordinate]%
-      (\baposter@box@name nw) +(0pt,-\baposter@box@@boxheaderheight)                coordinate(\baposter@box@name tnw)%
-      (\baposter@box@name nw |- \baposter@box@name se)   coordinate(\baposter@box@name sw)%
-      (\baposter@box@name se |- \baposter@box@name nw)   coordinate(\baposter@box@name ne)%
-      (\baposter@box@name ne) +(0pt,-\baposter@box@@boxheaderheight)                coordinate(\baposter@box@name tne)%
-%
-      (\baposter@box@name nw)  +(-0.025em,0pt)           coordinate(\baposter@box@name outer nw)%
-      (\baposter@box@name tnw) +(-0.025em,0pt)           coordinate(\baposter@box@name outer tnw)%
-      (\baposter@box@name sw)  +(-0.025em,0pt)           coordinate(\baposter@box@name outer sw)%
-%
-      (\baposter@box@name ne)  +( 0.025em,0pt)           coordinate(\baposter@box@name outer ne)%
-      (\baposter@box@name tne) +( 0.025em,0pt)           coordinate(\baposter@box@name outer tne)%
-      (\baposter@box@name se)  +( 0.025em,0pt)           coordinate(\baposter@box@name outer se);%
-%
-      %% Setting the bg colors of the box header
-      \baposterHeaderSetShade{headerColorOne}{headerColorTwo}{borderColor}
-%
-      \tikzstyle{rc}=[rounded corners=\baposter@box@@cornerradius];%
-      \tikzstyle{src}=[rounded corners=0.5em];%
-%
-
-    %% Now that everything is set up, draw the actual box, with bg and header
-    \begin{scope}[line width=\baposter@box@linewidth]
-      %% Header%
-      \debug{Header}%
-      \debug{Header-Shape: \baposter@box@headershape, header-border: \baposter@box@headerborder (\baposter@box@headerbordernr)}%
-      % TODO: Also turn this last ifcase construct into a handler function
-      %       We only need to determine (fill|shade)(draw|)...
-%       \baposterHeaderDrawBackground{bgColorOne}{bgColorTwo}{borderColor}
-%       \baposterHeaderDrawBorder{borderColor}
-      \ifcase\baposter@box@headerbordernr\relax%
-        % open
-        \ifthenelse{\equal{\baposter@box@headershade}{plain}}{
-          \filldraw  [style=header colors] \baposterHeaderGetShape;%
-        }{
-          \shadedraw [style=header colors] \baposterHeaderGetShape;%
-        }
-      \or
-        % closed
-        \ifthenelse{\equal{\baposter@box@headershade}{plain}}{
-          \filldraw  [style=header colors] \baposterHeaderGetShape -- cycle;%
-        }{
-          \shadedraw [style=header colors] \baposterHeaderGetShape -- cycle;%
-        }
-      \or
-        % none
-        \ifthenelse{\equal{\baposter@box@headershade}{plain}}{
-          \fill      [style=header colors] \baposterHeaderGetShape;%
-        }{
-          \shade     [style=header colors] \baposterHeaderGetShape;%
-        }
-      \fi
-      %
-      %% Draw the text inside the box header:
-      \baposterHeaderDrawText{\color{headerFontColor}\baposter@box@headerfont{\baposter@box@title}};%
-      %
-      %% Text borders (border around boxes)
-      \debug{Poster boxes}%
-      % First set box shade
-      \baposterBoxDrawBackground{boxColorOne}{boxColorTwo}
-      \baposterBoxDrawBorder{borderColor}
-      %%
-      %% Text Box%
-      \debug{Drawing Text}%
-      \path (\baposter@box@name tnw) node(text) [anchor=north west,
-            outer sep=-0.000em,text width=\boxwidth-2\baposter@box@@boxpadding,inner sep=\baposter@box@@boxpadding,
-            text justified] {\usebox{\baposter@box@content}};%
-    \end{scope}
-    %
-    % Finally store the box name as the previous box for the next call
-%     \xdef\@@previousbox{\baposter@box@name}%
-  }% END of posterbox definition
-%
-  %% Poster Background%
-  \baposterPosterDrawBackground{bgColorOne}{bgColorTwo}%
-  %% Poster header/title
-  \hspace{-1.5em}%
-  \begin{tikzpicture}[inner sep=0pt,outer sep=0pt,line width=0.05em]%
-    \useasboundingbox (0em,0em) rectangle(\textwidth,\textheight);%
-    \path[shape=coordinate]%
-      (0pt,\colheight) coordinate(north west) (\textwidth,\colheight) coordinate(north east)%
-      (0pt,0pt) coordinate(south west)        (\textwidth,0pt) coordinate(south east);%
-%
-    \ifbaposter@eyecatcher% Has eye catcher
-      \debug{Eyecatcher found!}
-      \setbox\baposter@titleimage@left=\hbox{#2}%
-    \else% Has no eye catcher%
-      \setbox\baposter@titleimage@left=\hbox{}%
-    \fi%
-    \setlength{\baposter@titleimage@left@width}{\wd\baposter@titleimage@left}%
-    \setbox\baposter@titleimage@right=\hbox{#5}%
-    \setlength{\baposter@titleimage@right@width}{\wd\baposter@titleimage@right}%
-    \setlength{\baposter@titleimage@textwidth}{\textwidth}%
-    \addtolength{\baposter@titleimage@textwidth}{-\baposter@titleimage@left@width}%
-    \addtolength{\baposter@titleimage@textwidth}{-\baposter@titleimage@right@width}%
-
-    \debug{#3}
-    %
-    %
-    %      % Draw Header%
-    \newlength{\imagesoffset}
-    \setlength{\imagesoffset}{3em}
-    \draw (north west) +(0em,1em-\imagesoffset+0.5\headerheight) node(image)[anchor=west]   { {\usebox{\baposter@titleimage@left }} };%
-    \draw (north east) +(0em,1em-\imagesoffset+0.5\headerheight) node(logo) [anchor=east]   { {\usebox{\baposter@titleimage@right}} };%
-    %
-    \ifbaposter@eyecatcher% Has eye catcher%
-      \draw (image.east) +(0em,\imagesoffset) node(title)[anchor=west,text width=\baposter@titleimage@textwidth]{%
-        \begin{minipage}{\baposter@titleimage@textwidth}%
-          \begin{center}%
-          \textbf{\Huge #3}\\%
-          {\Large #4}%
-          \end{center}%
-        \end{minipage}
-      };%
-    \else% Has no eye catcher
-      \draw (image.east) node(title)[anchor=west]  { {\begin{minipage}{\baposter@titleimage@textwidth}{\bfseries\Huge #3}\\{\Large #4}\end{minipage}} };%
-    \fi
-  }% END poster begin
+	\thispagestyle{empty}% Suppress Page Number
+	\debug{Poster Starts}%
+	% This setkeys call parses all provided options and depending on the option
+	% value, assigns different handler functions to the \baposter(Box|Header)*
+	% functions. Once that is done, we don't have to care about particular
+	% values for border, shading, etc. All we have to do is call the
+	% handler functions and let them do their job.
+	% This also allows the user to override the poster-wide defaults on a per-box
+	% basis.
+	\setkeys[ba]{posterbox,poster}{#1}%
+	%
+	% TODO: Move all those assignments to the key macros!
+	% Parse Keys%
+	\colorlet{bgColorOne}{\baposter@bgColorOne}
+	\colorlet{bgColorTwo}{\baposter@bgColorTwo}
+	%
+	%% Boxes%
+	\setlength{\headerheight}{\baposter@headerheight}%
+	\setlength{\colheight}{\textheight-\baposter@headerheight}%
+	\renewcommand{\@@previousbox}{notset}
+	
+	\debug{Format}%
+	% Set default for columns if unset (4 for landscape, 3 for portrait)
+	\ifthenelse{\equal{\baposter@columns}{}}{%
+		\renewcommand{\baposter@columns}{\if@landscape4\else3\fi}%
+	}{}
+	%
+	\debug{Columns: \baposter@columns}%
+	\setlength{\baposter@@colspacing}{\baposter@colspacing}%
+	\setlength{\colwidth}{\textwidth}%
+	\addtolength{\colwidth}{\baposter@@colspacing*(1-\baposter@columns)}%
+	\ifcase\baposter@columns\relax
+	\error{You need to have at least one column!}
+	\or % 1
+	\setlength{\colwidth}{\colwidth}%
+	\or % 2
+	\setlength{\colwidth}{0.5\colwidth}%
+	\or % 3
+	\setlength{\colwidth}{0.3333333333333\colwidth}%
+	\or % 4
+	\setlength{\colwidth}{0.25\colwidth}%
+	\or % 5
+	\setlength{\colwidth}{0.2\colwidth}%
+	\or % 6
+	\setlength{\colwidth}{0.16666666666\colwidth}%
+	\else % >6
+	\error{You do not want so many columns}
+	\fi
+	%
+	\newcommand{\baposter@reference}{north west}%
+	%
+	%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+	% A box with a header and some content. The basic unit of the poster%
+	%---------------------------------------------------------------------------%
+	% Each box has a name and can be placed absolutely or relatively.%
+	% The only inconvenience is that you can only specify a relative position %
+	% towards an already declared box. So if you have a box attached to the %
+	% bottom, one to the top and a third one which should be inbetween, you %
+	% have to specify the top and bottom boxes before you specify the middle %
+	% box.%
+	%%
+	% below=  name of other node%
+	% above=  name of other node%
+	% aligned=name of other node%
+	% bottomaligned=name of other node%
+	% column= [0]     %
+	% row=    [0]     %
+	% span=   [1]     %
+	% height= <size in percent of column height>,[auto]%
+	% name=   [noname]%
+	%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+	
+	% Backward-compatibility definition (\headerbox command uses posterbox env):
+	\newcommand{\headerbox}[3]{%
+		\begin{posterbox}[##2]{##1}
+			##3
+		\end{posterbox}
+	}
+	
+	\newenvironment{posterbox}[2][]{%
+		\debug{Poster box options: ##1}%
+		% Override the poster-wide defaults on a per-box basis
+		\setkeys[ba]{posterbox}{##1}%
+		%
+		\def\baposter@box@title{##2}
+		%
+		\colorlet{borderColor}{\baposter@box@borderColor}
+		\colorlet{headerColorOne}{\baposter@box@headerColorOne}
+		\colorlet{headerColorTwo}{\baposter@box@headerColorTwo}
+		\colorlet{headerFontColor}{\baposter@box@headerFontColor}
+		\colorlet{boxColorOne}{\baposter@box@boxColorOne}
+		\colorlet{boxColorTwo}{\baposter@box@boxColorTwo}
+		%
+		\setlength{\baposter@box@@cornerradius}{\baposter@box@cornerradius}%
+		\setlength{\baposter@box@@boxheaderheight}{\baposter@box@boxheaderheight}%
+		\setlength{\baposter@box@@boxpadding}{\baposter@box@boxpadding}%
+		
+		
+		%% The columns is always given absolute
+		% boxstartx = column * colwidth + column * colspacing
+		\setlength{\boxstartx}{(\colwidth+\baposter@@colspacing)*\baposter@box@column}%
+		%
+		%% The width is gvien absolute
+		% Box Width = span * colwidth + (span-1) * colspacing
+		\setlength{\boxwidth}{\baposter@box@span\colwidth} %
+		\addtolength{\boxwidth}{\baposter@@colspacing*(\baposter@box@span-1)}%
+		%
+		%% Measure the content of the box%
+		\setbox\baposter@box@content=\hbox\bgroup%
+		\begin{pgfinterruptpicture}%
+			\begin{minipage}[t]{\boxwidth-\baposter@box@@boxpadding*2}%
+				\baposter@box@textfont\bgroup%
+			}% End of posterbox preamble
+			%%% HERE COME THE ACTUAL CONTENTS OF THE HEADERBOX ENVIRONMENT
+			{% posterbox handling after contents (i.e. drawing everything)
+				\egroup%
+			\end{minipage}%
+		\end{pgfinterruptpicture}%
+		\egroup%
+		\setlength{\boxheight}{\ht\baposter@box@content}%
+		\addtolength{\boxheight}{\dp\baposter@box@content}%
+		\addtolength{\boxheight}{\baposter@box@@boxheaderheight} % Header%
+		\addtolength{\boxheight}{2\baposter@box@@boxpadding} % Inner Sep
+		%
+		\ifthenelse{\equal{\baposter@box@height}{bottom}}{%
+		}{\ifthenelse{\equal{\baposter@box@height}{auto}}{%
+			}{ % Neither auto nor bottom%
+				\setlength{\boxheight}{\baposter@box@height\colheight}%
+		}}%
+		%
+		%% Determine the box position%
+		\debug{Setting Coordinates}%
+		\debug{Upper Right}%
+		\debug{\baposter@box@name}%
+		%
+		%%% Upper Right Corner%
+		% if below=auto, set it to the previous box
+		% TODO: We should generalize this to the previous box of the used column,
+		%       currently we use the previous box, which might be in a different column
+		\ifthenelse{\equal{\baposter@box@below}{auto}}{%
+			\edef\baposter@box@below{\@@previousbox}
+			\debug{Box \baposter@box@name  has below=auto, placing it below box \baposter@box@below.}
+		}{}
+		\xdef\@@previousbox{\baposter@box@name}
+		
+		\ifthenelse{\not\equal{\baposter@box@below}{notset} }{%
+			%% Below%
+			\debug{Below}%
+			\path[shape=coordinate] (\boxstartx,0pt |- \baposter@box@below se) ++(0pt,-\baposter@@colspacing) coordinate(\baposter@box@name nw);%
+		}{%
+			\ifthenelse{\not\equal{\baposter@box@aligned}{notset} }{%
+				%% Aligned%
+				\debug{Aligned: \baposter@box@aligned}%
+				\path[shape=coordinate] (\boxstartx,0pt |- \baposter@box@aligned nw)                           coordinate(\baposter@box@name nw);%
+			}{%
+				%% Fixed%
+				\debug{Fixed}%
+				\setlength{\boxstarty}{\baposter@box@row\colheight}%
+				\path[shape=coordinate] (\boxstartx,\colheight-\boxstarty)                                                  coordinate(\baposter@box@name nw);%
+		}}%
+		%
+		%% Lower Left Corner%
+		\debug{Lower Left}%
+		\ifthenelse{\equal{\baposter@box@above}{bottom}}{%
+			%% Above = Bottom%
+			\debug{Above bottom}%
+			\ifthenelse{\equal{\baposter@box@below}{notset} \and \equal{\baposter@box@aligned}{notset}}{%
+				\path[shape=coordinate] (\boxstartx,\boxheight)                                                              coordinate(\baposter@box@name nw);%
+			}{}%
+			\path[shape=coordinate] (\boxstartx+\boxwidth,0pt)                                                           coordinate(\baposter@box@name se);%
+		}{\ifthenelse{\not \equal{\baposter@box@bottomaligned}{notset}}{%
+				\path[shape=coordinate] (\boxstartx+\boxwidth,0pt |- \baposter@box@bottomaligned se)                       coordinate(\baposter@box@name se);%
+			}{{\ifthenelse{\not \equal{\baposter@box@above}{notset}}{%
+						%% Above = Node%
+						\path[shape=coordinate] (\boxstartx+\boxwidth,0pt |- \baposter@box@above nw)  +(0pt,\baposter@@colspacing) coordinate(\baposter@box@name se);%
+					}{%
+						%% Above = notset%
+						\debug{Above=not set}%
+						\ifthenelse{\equal{\baposter@box@height}{bottom}}{%
+							%% height=bottom%
+							\debug{height=bottom}%
+							\path[shape=coordinate] (\boxstartx+\boxwidth,0pt)                                                       coordinate(\baposter@box@name se);%
+						}{ %% height=auto or fixed%
+							\debug{height=auto or fixed}%
+							\path[shape=coordinate] (\baposter@box@name nw) ++(\boxwidth,-\boxheight)                                coordinate(\baposter@box@name se);%
+		}}}}}%
+		%
+		%
+		% Set coordinates relative to nw,se%
+		\debug{Fixing Coordinates}%
+		\path[shape=coordinate]%
+		(\baposter@box@name nw) +(0pt,-\baposter@box@@boxheaderheight)                coordinate(\baposter@box@name tnw)%
+		(\baposter@box@name nw |- \baposter@box@name se)   coordinate(\baposter@box@name sw)%
+		(\baposter@box@name se |- \baposter@box@name nw)   coordinate(\baposter@box@name ne)%
+		(\baposter@box@name ne) +(0pt,-\baposter@box@@boxheaderheight)                coordinate(\baposter@box@name tne)%
+		%
+		(\baposter@box@name nw)  +(-0.025em,0pt)           coordinate(\baposter@box@name outer nw)%
+		(\baposter@box@name tnw) +(-0.025em,0pt)           coordinate(\baposter@box@name outer tnw)%
+		(\baposter@box@name sw)  +(-0.025em,0pt)           coordinate(\baposter@box@name outer sw)%
+		%
+		(\baposter@box@name ne)  +( 0.025em,0pt)           coordinate(\baposter@box@name outer ne)%
+		(\baposter@box@name tne) +( 0.025em,0pt)           coordinate(\baposter@box@name outer tne)%
+		(\baposter@box@name se)  +( 0.025em,0pt)           coordinate(\baposter@box@name outer se);%
+		%
+		%% Setting the bg colors of the box header
+		\baposterHeaderSetShade{headerColorOne}{headerColorTwo}{borderColor}
+		%
+		\tikzstyle{rc}=[rounded corners=\baposter@box@@cornerradius];%
+		\tikzstyle{src}=[rounded corners=0.5em];%
+		%
+		
+		%% Now that everything is set up, draw the actual box, with bg and header
+		\begin{scope}[line width=\baposter@box@linewidth]
+			%% Header%
+			\debug{Header}%
+			\debug{Header-Shape: \baposter@box@headershape, header-border: \baposter@box@headerborder (\baposter@box@headerbordernr)}%
+			% TODO: Also turn this last ifcase construct into a handler function
+			%       We only need to determine (fill|shade)(draw|)...
+			%       \baposterHeaderDrawBackground{bgColorOne}{bgColorTwo}{borderColor}
+			%       \baposterHeaderDrawBorder{borderColor}
+			\ifcase\baposter@box@headerbordernr\relax%
+			% open
+			\ifthenelse{\equal{\baposter@box@headershade}{plain}}{
+				\filldraw  [style=header colors] \baposterHeaderGetShape;%
+			}{
+				\shadedraw [style=header colors] \baposterHeaderGetShape;%
+			}
+			\or
+			% closed
+			\ifthenelse{\equal{\baposter@box@headershade}{plain}}{
+				\filldraw  [style=header colors] \baposterHeaderGetShape -- cycle;%
+			}{
+				\shadedraw [style=header colors] \baposterHeaderGetShape -- cycle;%
+			}
+			\or
+			% none
+			\ifthenelse{\equal{\baposter@box@headershade}{plain}}{
+				\fill      [style=header colors] \baposterHeaderGetShape;%
+			}{
+				\shade     [style=header colors] \baposterHeaderGetShape;%
+			}
+			\fi
+			%
+			%% Draw the text inside the box header:
+			\baposterHeaderDrawText{\color{headerFontColor}\baposter@box@headerfont{\baposter@box@title}};%
+			%
+			%% Text borders (border around boxes)
+			\debug{Poster boxes}%
+			% First set box shade
+			\baposterBoxDrawBackground{boxColorOne}{boxColorTwo}
+			\baposterBoxDrawBorder{borderColor}
+			%%
+			%% Text Box%
+			\debug{Drawing Text}%
+			\path (\baposter@box@name tnw) node(text) [anchor=north west,
+			outer sep=-0.000em,text width=\boxwidth-2\baposter@box@@boxpadding,inner sep=\baposter@box@@boxpadding,
+			text justified] {\usebox{\baposter@box@content}};%
+		\end{scope}
+		%
+		% Finally store the box name as the previous box for the next call
+		%     \xdef\@@previousbox{\baposter@box@name}%
+	}% END of posterbox definition
+	%
+	%% Poster Background%
+	\baposterPosterDrawBackground{bgColorOne}{bgColorTwo}%
+	%% Poster header/title
+	\hspace{-1.5em}%
+	\begin{tikzpicture}[inner sep=0pt,outer sep=0pt,line width=0.05em]%
+	\useasboundingbox (0em,0em) rectangle(\textwidth,\textheight);%
+	\path[shape=coordinate]%
+	(0pt,\colheight) coordinate(north west) (\textwidth,\colheight) coordinate(north east)%
+	(0pt,0pt) coordinate(south west)        (\textwidth,0pt) coordinate(south east);%
+	%
+	\ifbaposter@eyecatcher% Has eye catcher
+	\debug{Eyecatcher found!}
+	\setbox\baposter@titleimage@left=\hbox{#2}%
+	\else% Has no eye catcher%
+	\setbox\baposter@titleimage@left=\hbox{}%
+	\fi%
+	\setlength{\baposter@titleimage@left@width}{\wd\baposter@titleimage@left}%
+	\setbox\baposter@titleimage@right=\hbox{#5}%
+	\setlength{\baposter@titleimage@right@width}{\wd\baposter@titleimage@right}%
+	\setlength{\baposter@titleimage@textwidth}{\textwidth}%
+	\addtolength{\baposter@titleimage@textwidth}{-\baposter@titleimage@left@width}%
+	\addtolength{\baposter@titleimage@textwidth}{-\baposter@titleimage@right@width}%
+	
+	\debug{#3}
+	%
+	%
+	%      % Draw Header%
+	\draw (north west) +(0em,1em+0.5\headerheight) node(image)[anchor=west]   { {\usebox{\baposter@titleimage@left }} };%
+	\draw (north east) +(0em,1em+0.5\headerheight) node(logo) [anchor=east]   { {\usebox{\baposter@titleimage@right}} };%
+	%
+	\ifbaposter@eyecatcher% Has eye catcher%
+	\draw (image.east) node(title)[anchor=west,text width=\baposter@titleimage@textwidth]{%
+		\begin{minipage}{\baposter@titleimage@textwidth}%
+		\begin{center}%
+		\textbf{\Huge #3}\\%
+		{\Large #4}%
+		\end{center}%
+		\end{minipage}
+	};%
+	\else% Has no eye catcher
+	\draw (image.east) node(title)[anchor=west]  { {\begin{minipage}{\baposter@titleimage@textwidth}{\bfseries\Huge #3}\\{\Large #4}\end{minipage}} };%
+	\fi
+}% END poster begin
 % The body
-  {% BEGIN poster end
-    % The end, draw gridlines if neccesary
-    \ifbaposter@grid
-      \newdimen{\gridpos}
-      \pgfmathsetmacro{\z}{\baposter@columns-1}
-      \foreach \y in {0,...,\z}
-      {
-        \setlength{\gridpos}{\y\colwidth+\y\baposter@@colspacing}
-        \draw[draw=green,draw opacity=0.7] (\gridpos,0pt)  -- (\gridpos,\colheight)
-            (\gridpos+\colwidth,0pt)  -- (\gridpos+\colwidth,\colheight);%
-      }
-      % Horizontal lines, every 0.1:
-      %% Explicitly list all percentages, because with {0.0, 0.1, ..., 1.0} we
-      %% get rounding errors in the displayed numbers!
-      \foreach \y in {0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0}
-        \draw[draw=green,draw opacity=0.7] (0pt,\colheight-\y\colheight)  --
-            (\textwidth,\colheight-\y\colheight) node[anchor=west] {\y};%
-    \fi%
-  \end{tikzpicture}%
- % \xkvview{}
- \par
-  }% END poster end
+{% BEGIN poster end
+	% The end, draw gridlines if neccesary
+	\ifbaposter@grid
+	\newdimen{\gridpos}
+	\pgfmathsetmacro{\z}{\baposter@columns-1}
+	\foreach \y in {0,...,\z}
+	{
+		\setlength{\gridpos}{\y\colwidth+\y\baposter@@colspacing}
+		\draw[draw=green,draw opacity=0.7] (\gridpos,0pt)  -- (\gridpos,\colheight)
+		(\gridpos+\colwidth,0pt)  -- (\gridpos+\colwidth,\colheight);%
+	}
+	% Horizontal lines, every 0.1:
+	%% Explicitly list all percentages, because with {0.0, 0.1, ..., 1.0} we
+	%% get rounding errors in the displayed numbers!
+	\foreach \y in {0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0}
+	\draw[draw=green,draw opacity=0.7] (0pt,\colheight-\y\colheight)  --
+	(\textwidth,\colheight-\y\colheight) node[anchor=west] {\y};%
+	\fi%
+	\end{tikzpicture}%
+	% \xkvview{}
+	\par
+}% END poster end

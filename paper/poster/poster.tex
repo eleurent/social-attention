@@ -18,7 +18,7 @@
 %	PACKAGES AND OTHER DOCUMENT CONFIGURATIONS
 %----------------------------------------------------------------------------------------
 
-\documentclass[a0paper,portrait,fontscale=0.3, margin=2cm]{baposter}
+\documentclass[paperwidth=36in,paperheight=48in,portrait,fontscale=0.3, margin=2cm]{baposter}
 
 \usepackage[utf8]{inputenc}
 \usepackage[font=normalsize,labelfont=bf]{caption} % Required for specifying captions to tables and figures
@@ -74,7 +74,7 @@
 \usepackage{pifont}
 
 
-\bibliography{../budgeted_rl.bib}
+\bibliography{../references.bib}
 
 \input{style}
 \input{../mathdef}
@@ -104,7 +104,7 @@ background=none,
 headerborder=open, % Change to closed for a line under the content box headers
 boxshade=plain,
 textfont={\setlength{\parindent}{0.0em}\sffamily},
-headerheight={0.05\textheight},
+headerheight={0.06\textheight},
 eyecatcher=true
 %columns=5
 }
@@ -114,20 +114,17 @@ eyecatcher=true
 %----------------------------------------------------------------------------------------
 %
 {
-\includegraphics[width=10em]{./img/companies}
+\includegraphics[height=1.7cm]{./img/companies}
 }
 {
 Social Attention for Autonomous Decision-Making in Dense Traffic
 }
 {
-Edouard Leurent, Jean Mercat
-\vspace{-4\baselineskip}
+Edouard Leurent$^*$, Jean Mercat$^*$
 }
 {
-\includegraphics[width=12em]{./img/inria_sc}
+\includegraphics[height=2cm]{./img/inria_sc}
 }
-
-\setlength{\colheight}{0.92\textheight}
 
 %----------------------------------------------------------------------------------------
 %	Motivation
@@ -144,6 +141,7 @@ Edouard Leurent, Jean Mercat
 
 \textbf{Reinforcement Learning}
 
+Optimal Control Ojective
 \begin{equation*}
 Q^*(s, a) \eqdef \max_\pi \expectedvalue\left[\sum_{t=0}^\infty \gamma^t R(s_t, a_t)\condbar \substack{
 s_0=s\\a_0=a
@@ -151,7 +149,7 @@ s_0=s\\a_0=a
 \right]
 \end{equation*}
 
-Bellman Optimality Equation:
+Bellman Optimality Equation and DQN Algorithm
 \begin{equation*}
 Q^*(s, a) = \expectedvalueover{s'\sim P(s'|s, a)} \max_{a'\in A} \left[R(s, a) + \gamma Q^*(s', a')\right]
 \end{equation*}
@@ -189,7 +187,7 @@ x_i & y_i & v^x_i & v^y_i & \cos\psi_i & \sin \psi_i
 
 	\item \hlr{Sensitivity} to the ordering
 	\begin{itemize}
-		\item we want the policy to be \hlg{permutation-invariant}:
+		\item[\incarrow] we want the policy to be \hlg{permutation-invariant}:
 	\end{itemize}
 \begin{align*}
 \forall\tau \in \mathfrak{S}_N, \qquad &\pi(\cdot|(s_0, s_1,\dotsc,s_N)) = \\ &\pi(\cdot|(s_0, s_{\tau(1)},\dotsc,s_{\tau(N)}))
@@ -202,7 +200,7 @@ x_i & y_i & v^x_i & v^y_i & \cos\psi_i & \sin \psi_i
 	\captionof*{figure}{Occupancy grid representation}
 \end{center}
 
-\begin{itemize}[nolistsep]
+\begin{itemize}[]
 	\item[\hlg{\checkmark}] Fixed-size
 	\item[\hlg{\checkmark}] Does not depend on an ordering
 	\item[\hlr{\xmark}] Suffers from an \hlr{accuracy / size tradeoff}
