@@ -2,6 +2,9 @@
 
 We study the design of learning architectures for behavioural planning in a dense traffic setting. Such architectures should deal with a varying number of nearby vehicles, be invariant to the ordering chosen to describe them, while staying accurate and compact. We observe that the two most popular representations in the literature do not fit these criteria, and perform badly on an complex negotiation task. We propose an attention-based architecture that satisfies all these properties and explicitly accounts for the existing interactions between the traffic participants. We show that this architecture leads to significant performance gains, and is able to capture interactions patterns that can be visualized and qualitatively interpreted.
 
+<p align="center"><img src="assets/social_attention.svg" width="100%"></img><br><em>A social attention architecture.</em></p>
+
+
 ## Videos
 
 *(Only supported on the [github page](https://eleurent.github.io/social-attention/))*
