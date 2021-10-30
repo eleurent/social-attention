@@ -30,7 +30,7 @@ We study the design of learning architectures for behavioural planning in a dens
 
 1. Install the [highway-env](https://github.com/eleurent/highway-env) environment
 
-`pip install --user git+https://github.com/eleurent/highway-env`
+`pip install highway-env`
 
 2. Install the [rl-agents](https://github.com/eleurent/rl-agents) implementations, and clone the repository.
 
